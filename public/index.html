@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Terrains Contaminés - Val-d'Or</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .table-responsive {
+            margin-bottom: 20px;
+        }
+        table {
+            font-size: 0.9rem;
+        }
+        .btn-export {
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: white;
+            border-radius: 10px;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Application de Gestion des Terrains Contaminés</h1>
+        <p class="lead text-center">Ville de Val-d'Or - Registre des terrains contaminés</p>
+        
+        <!-- Statistiques -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <h5>Terrains municipaux</h5>
+                    <h2 id="stats-municipal">0</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h5>Registre gouvernemental</h5>
+                    <h2 id="stats-government">0</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <h5>Non officiels</h5>
+                    <h2 id="stats-not-official">0</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <h5>Décontaminés</h5>
+                    <h2 id="stats-decontaminated">0</h2>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Onglets -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="municipal-tab" data-bs-toggle="tab" data-bs-target="#municipal" type="button" role="tab">
+                    🏘️ Données municipales
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="government-tab" data-bs-toggle="tab" data-bs-target="#government" type="button" role="tab">
+                    🏛️ Registre gouvernemental
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="not-official-tab" data-bs-toggle="tab" data-bs-target="#not-official" type="button" role="tab">
+                    ⚠️ Non officiels
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="decontaminated-tab" data-bs-toggle="tab" data-bs-target="#decontaminated" type="button" role="tab">
+                    ✅ Décontaminés
+                </button>
+            </li>
+        </ul>
+        
+        <!-- Contenu des onglets -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Onglet Données municipales -->
+            <div class="tab-pane fade show active" id="municipal" role="tabpanel">
+                <div class="filter-section">
+                    <h5>Filtres</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="text" id="address-filter" class="form-control" placeholder="Filtrer par adresse">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="lot-filter" class="form-control" placeholder="Filtrer par lot">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="reference-filter" class="form-control" placeholder="Filtrer par référence">
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="export-pdf-municipal" class="btn btn-primary btn-export">
+                    📄 Exporter en PDF
+                </button>
+                
+                <div class="loading" id="loading-municipal">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="municipal-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Adresse</th>
+                                <th>Lot</th>
+                                <th>Référence</th>
+                                <th>Avis décontamination</th>
+                                <th>Bureau publicité</th>
+                                <th>Commentaires</th>
+                            </tr>
+                        </thead>
+                        <tbody id="municipal-tbody">
+                            <!-- Les données seront insérées ici par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Onglet Registre gouvernemental -->
+            <div class="tab-pane fade" id="government" role="tabpanel">
+                <div class="filter-section">
+                    <h5>Filtres</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="text" id="government-address-filter" class="form-control" placeholder="Filtrer par adresse">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="government-lot-filter" class="form-control" placeholder="Filtrer par lot">
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" id="government-reference-filter" class="form-control" placeholder="Filtrer par référence">
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="export-pdf-government" class="btn btn-primary btn-export">
+                    📄 Exporter en PDF
+                </button>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="government-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Adresse</th>
+                                <th>Lot</th>
+                                <th>Référence</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody id="government-tbody">
+                            <!-- Les données seront insérées ici par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Onglet Non officiels -->
+            <div class="tab-pane fade" id="not-official" role="tabpanel">
+                <div class="alert alert-warning" role="alert">
+                    ⚠️ Ces terrains sont dans le registre municipal mais ne sont pas dans le registre gouvernemental officiel.
+                </div>
+                
+                <button id="export-pdf-not-in-official" class="btn btn-primary btn-export">
+                    📄 Exporter en PDF
+                </button>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="not-in-official-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Adresse</th>
+                                <th>Lot</th>
+                                <th>Référence</th>
+                                <th>Commentaires</th>
+                            </tr>
+                        </thead>
+                        <tbody id="not-official-tbody">
+                            <!-- Les données seront insérées ici par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Onglet Décontaminés -->
+            <div class="tab-pane fade" id="decontaminated" role="tabpanel">
+                <div class="alert alert-success" role="alert">
+                    ✅ Ces terrains ont été décontaminés et ne figurent plus dans le registre gouvernemental.
+                </div>
+                
+                <button id="export-pdf-decontaminated" class="btn btn-primary btn-export">
+                    📄 Exporter en PDF
+                </button>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="decontaminated-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Adresse</th>
+                                <th>Lot</th>
+                                <th>Date décontamination</th>
+                                <th>Avis décontamination</th>
+                            </tr>
+                        </thead>
+                        <tbody id="decontaminated-tbody">
+                            <!-- Les données seront insérées ici par JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section Rapport -->
+        <div class="mt-5">
+            <h3>📋 Générer un rapport</h3>
+            <p>Générez un rapport complet pour les demandes d'accès à l'information.</p>
+            <button id="generate-report" class="btn btn-success">
+                Générer le rapport complet
+            </button>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2024 Ville de Val-d'Or - Application de gestion des terrains contaminés</p>
+        <p><small>Dernière mise à jour : <span id="last-update">En attente...</span></small></p>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application JS (sera chargé comme module) -->
+    <script type="module" src="../src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "ID": "1",
+      "Adresse": "Données gouvernementales en attente",
+      "Ville": "Val-d'Or",
+      "MRC": "La Vallée-de-l'Or",
+      "Région": "Abitibi-Témiscamingue",
+      "Code postal": "",
+      "Superficie": "",
+      "État de contamination": "En attente de synchronisation",
+      "Nature de la contamination": "",
+      "Date création": "",
+      "Date MAJ": "2024-10-17"
+    }
+  ],
+  "metadata": {
+    "source": "Registre des terrains contaminés - Gouvernement du Québec",
+    "city": "Val-d'Or",
+    "total_records": 0,
+    "last_update": "2024-10-17T00:00:00",
+    "generated_by": "Template initial",
+    "note": "Exécutez automate_registre_valdor.py puis convert_excel_to_json.py pour obtenir les vraies données"
+  }
+}

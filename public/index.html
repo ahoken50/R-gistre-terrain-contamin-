@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Répertoire des Terrains Contaminés</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+        .tab-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .decontaminated {
+            background-color: #d4edda !important;
+            text-decoration: line-through;
+        }
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .filter-section {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1><i class="bi bi-map"></i> Répertoire des Terrains Contaminés</h1>
+            <p class="lead">Consultation et gestion du répertoire municipal et gouvernemental</p>
+        </div>
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="municipal-tab" data-bs-toggle="tab" data-bs-target="#municipal" type="button" role="tab">
+                    Terrains Contaminés Municipaux
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="government-tab" data-bs-toggle="tab" data-bs-target="#government" type="button" role="tab">
+                    Répertoire Officiel Gouvernemental
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="not-in-official-tab" data-bs-toggle="tab" data-bs-target="#not-in-official" type="button" role="tab">
+                    Terrains Non Présents dans le Répertoire Officiel
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="decontaminated-tab" data-bs-toggle="tab" data-bs-target="#decontaminated" type="button" role="tab">
+                    Terrains Décontaminés (Archivés)
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Onglet Terrains Contaminés Municipaux -->
+            <div class="tab-pane fade show active" id="municipal" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Terrains Contaminés Municipaux</h2>
+                    <div>
+                        <button class="btn btn-primary" id="export-pdf-municipal">
+                            <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+                        </button>
+                        <button class="btn btn-success" id="generate-report">
+                            <i class="bi bi-file-earmark-text"></i> Générer Rapport d'Accès à l'Information
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <h5>Filtres</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="address-filter" class="form-label">Adresse</label>
+                            <input type="text" class="form-control" id="address-filter" placeholder="Filtrer par adresse">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="lot-filter" class="form-label">Numéro de lot</label>
+                            <input type="text" class="form-control" id="lot-filter" placeholder="Filtrer par numéro de lot">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="reference-filter" class="form-label">Référence MENVIQ</label>
+                            <input type="text" class="form-control" id="reference-filter" placeholder="Filtrer par référence">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table table-striped table-hover" id="municipal-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Adresse</th>
+                                <th>Numéro de lot</th>
+                                <th>Référence MENVIQ</th>
+                                <th>Avis de décontamination</th>
+                                <th>Bureau publicité des droits</th>
+                                <th>Commentaires</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les données seront chargées ici dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Onglet Répertoire Officiel Gouvernemental -->
+            <div class="tab-pane fade" id="government" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Répertoire Officiel Gouvernemental</h2>
+                    <button class="btn btn-primary" id="export-pdf-government">
+                        <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+                    </button>
+                </div>
+                
+                <div class="filter-section">
+                    <h5>Filtres</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="government-address-filter" class="form-label">Adresse</label>
+                            <input type="text" class="form-control" id="government-address-filter" placeholder="Filtrer par adresse">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="government-lot-filter" class="form-label">Numéro de lot</label>
+                            <input type="text" class="form-control" id="government-lot-filter" placeholder="Filtrer par numéro de lot">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="government-reference-filter" class="form-label">Référence</label>
+                            <input type="text" class="form-control" id="government-reference-filter" placeholder="Filtrer par référence">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table table-striped table-hover" id="government-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Référence</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Adresse</th>
+                                <th>Code postal</th>
+                                <th>MRC/Région</th>
+                                <th>Milieu récepteur</th>
+                                <th>Nombre de fiches</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les données seront chargées ici dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Onglet Terrains Non Présents dans le Répertoire Officiel -->
+            <div class="tab-pane fade" id="not-in-official" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Terrains Non Présents dans le Répertoire Officiel</h2>
+                    <button class="btn btn-primary" id="export-pdf-not-in-official">
+                        <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table table-striped table-hover" id="not-in-official-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Adresse</th>
+                                <th>Numéro de lot</th>
+                                <th>Référence MENVIQ</th>
+                                <th>Avis de décontamination</th>
+                                <th>Bureau publicité des droits</th>
+                                <th>Commentaires</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les données seront chargées ici dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Onglet Terrains Décontaminés (Archivés) -->
+            <div class="tab-pane fade" id="decontaminated" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Terrains Décontaminés (Archivés)</h2>
+                    <button class="btn btn-primary" id="export-pdf-decontaminated">
+                        <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table table-striped table-hover" id="decontaminated-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Adresse</th>
+                                <th>Numéro de lot</th>
+                                <th>Référence MENVIQ</th>
+                                <th>Avis de décontamination</th>
+                                <th>Bureau publicité des droits</th>
+                                <th>Commentaires</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Les données seront chargées ici dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Autres bibliothèques -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <!-- Notre application -->
+    <script src="../src/firebase.js"></script>
+    <script src="../src/app.js"></script>
+</body>
+</html>

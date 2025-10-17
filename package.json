@@ -1,0 +1,24 @@
+{
+  "name": "contaminated-lands-app",
+  "version": "1.0.0",
+  "description": "Application de gestion du répertoire des terrains contaminés",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server public -p 3000",
+    "test": "echo &quot;Error: no test specified&quot; && exit 1"
+  },
+  "keywords": ["terrains", "contaminés", "environnement", "gis"],
+  "author": "Votre Entreprise",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "autotable": "^1.0.0",
+    "csv-parser": "^3.2.0",
+    "firebase": "^12.4.0",
+    "jspdf": "^3.0.3",
+    "papaparse": "^5.5.3"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

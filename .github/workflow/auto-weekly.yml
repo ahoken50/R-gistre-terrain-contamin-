@@ -1,0 +1,29 @@
+name: Mise à jour registre Val-d'Or
+
+on:
+  schedule:
+    - cron:  '0 11 * * 5'  # Vendredi matin UTC (7h heure du Québec)
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev python3-gdal
+          pip install -r requirements.txt
+      - name: Run script
+        run: python automate_registre_valdor.py
+      - name: Upload output as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Registre-Valdor
+          path: Registre-des-terrains-contamines-Valdor.xlsx

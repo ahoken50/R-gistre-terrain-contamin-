@@ -10,7 +10,7 @@
   "keywords": ["terrains", "contaminés", "environnement", "gis"],
   "author": "Votre Entreprise",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "autotable": "^1.0.0",
     "csv-parser": "^3.2.0",

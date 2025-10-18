@@ -1,0 +1,42 @@
+{
+  "data": [
+    {
+      "adresse": "1185, des Foreurs",
+      "lot": 2299001,
+      "reference": "7610-08-01-17124-06",
+      "avis_decontamination": "",
+      "bureau_publicite": 12223243.0,
+      "commentaires": "Terrain commercial"
+    },
+    {
+      "adresse": "1075, 3e Avenue",
+      "lot": 2297678,
+      "reference": "7610-08-01-12049-06",
+      "avis_decontamination": "",
+      "bureau_publicite": "",
+      "commentaires": "Ancien garage"
+    },
+    {
+      "adresse": "912, 3e Avenue",
+      "lot": 2297604,
+      "reference": "",
+      "avis_decontamination": "",
+      "bureau_publicite": 12343867.0,
+      "commentaires": "Station-service désaffectée"
+    },
+    {
+      "adresse": "725, 3e Avenue",
+      "lot": 2297570,
+      "reference": "7610-08-01-12059-08",
+      "avis_decontamination": "",
+      "bureau_publicite": "",
+      "commentaires": "Zone industrielle"
+    }
+  ],
+  "metadata": {
+    "source": "Registre municipal - Ville de Val-d'Or",
+    "total_records": 4,
+    "last_update": "2025-10-17T18:59:38.341486",
+    "generated_by": "load_municipal_data.py"
+  }
+}

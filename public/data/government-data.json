@@ -1,0 +1,672 @@
+{
+  "data": [
+    {
+      "NO_MEF_LIEU": "90492539",
+      "LATITUDE": 45.5751271636,
+      "LONGITUDE": -73.6992551634,
+      "ADR_CIV_LIEU": "1060, boulevard des Laurentides (Pont-Viau)\r\nLaval (Québec)",
+      "CODE_POST_LIEU": "H7G 2W1",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "54873484",
+      "LATITUDE": 46.6167451627,
+      "LONGITUDE": -71.93235663550001,
+      "ADR_CIV_LIEU": "7472, route Marie-Victorin\r\nLotbinière (Québec)",
+      "CODE_POST_LIEU": "G0S 1S0",
+      "LST_MRC_REG_ADM": "330 - Lotbinière, 12 - Chaudière-Appalaches",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90317181",
+      "LATITUDE": 50.0237166372,
+      "LONGITUDE": -66.82094892040001,
+      "ADR_CIV_LIEU": "175, boulevard du Portage-des-Mousses\r\nPort-Cartier (Québec)",
+      "CODE_POST_LIEU": "G5B 2V9",
+      "LST_MRC_REG_ADM": "971 - Sept-Rivières, 09 - Côte-Nord",
+      "DESC_MILIEU_RECEPT": "Indéterminé",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2010985",
+      "LATITUDE": 45.5239534246,
+      "LONGITUDE": -73.8819812844,
+      "ADR_CIV_LIEU": "8, rue Les Pins\r\nLaval-sur-le-Lacl (Québec)",
+      "CODE_POST_LIEU": "H7R 1C7",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X1300162",
+      "LATITUDE": 45.6132171359,
+      "LONGITUDE": -73.6703341866,
+      "ADR_CIV_LIEU": "3960 boul. Leman\r\nLaval",
+      "CODE_POST_LIEU": "H7L 5C1",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90339920",
+      "LATITUDE": 45.5687181961,
+      "LONGITUDE": -73.5204795431,
+      "ADR_CIV_LIEU": "6010, rue Notre-Dame Est\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H1N 2E2",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "55583132",
+      "LATITUDE": 46.6164702779,
+      "LONGITUDE": -72.6830234297,
+      "ADR_CIV_LIEU": "100, Division Laurentide\r\n1e Rue (Grand-Mère)\r\nShawinigan (Québec)",
+      "CODE_POST_LIEU": "G9T 7J1",
+      "LST_MRC_REG_ADM": "360 - Ville de Shawinigan, 04 - Mauricie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "X2005016",
+      "LATITUDE": 45.706055657300006,
+      "LONGITUDE": -73.42064724560001,
+      "ADR_CIV_LIEU": "3171, route Marie-Victorin\r\nVarennes (Québec)",
+      "CODE_POST_LIEU": "J3X 1P7",
+      "LST_MRC_REG_ADM": "590 - Marguerite-D'Youville, 16 - Montérégie",
+      "DESC_MILIEU_RECEPT": "Indéterminé",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2196327",
+      "LATITUDE": 45.4217592508,
+      "LONGITUDE": -72.7401737188,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "470 - La Haute-Yamaska, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90519091",
+      "LATITUDE": 45.5493683635,
+      "LONGITUDE": -73.5664837724,
+      "ADR_CIV_LIEU": "4675, boulevard Saint-Michel\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H1Y 3P6",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2118541",
+      "LATITUDE": 45.5333145408,
+      "LONGITUDE": -73.5453695603,
+      "ADR_CIV_LIEU": "1455, rue Bercy\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H2K 2V1",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "X1300568",
+      "LATITUDE": 45.549053477899996,
+      "LONGITUDE": -73.7561904394,
+      "ADR_CIV_LIEU": "3874, chemin du Souvenir\r\nLaval (Québec)",
+      "CODE_POST_LIEU": "H7V 1Y4",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2096227",
+      "LATITUDE": 45.5861494024,
+      "LONGITUDE": -73.5299986874,
+      "ADR_CIV_LIEU": "7201, rue Georges-Villeneuve\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H1N 0B8",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2017928",
+      "LATITUDE": 45.5887373856,
+      "LONGITUDE": -73.71934617810001,
+      "ADR_CIV_LIEU": "160, - 164, rue de la Station\r\nLaval (Québec)",
+      "CODE_POST_LIEU": "H7M 3H7",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2162762",
+      "LATITUDE": 45.2322996178,
+      "LONGITUDE": -73.6741783173,
+      "ADR_CIV_LIEU": "1767, rang Saint-Antoine\r\nSaint-Rémi (Québec)",
+      "CODE_POST_LIEU": "J0L 2L0",
+      "LST_MRC_REG_ADM": "680 - Les Jardins-de-Napierville, 16 - Montérégie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2184604",
+      "LATITUDE": 45.5292584234,
+      "LONGITUDE": -73.59537296980001,
+      "ADR_CIV_LIEU": "5524, rue Saint-Denis\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H2J 2M5",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90481680",
+      "LATITUDE": 46.0128769214,
+      "LONGITUDE": -73.473064941,
+      "ADR_CIV_LIEU": "925, Village St-Pierre Sud\r\nJoliette (Québec)",
+      "CODE_POST_LIEU": "J6E 3Z1",
+      "LST_MRC_REG_ADM": "610 - Joliette, 14 - Lanaudière",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90138017",
+      "LATITUDE": 45.482879429300006,
+      "LONGITUDE": -75.5749750457,
+      "ADR_CIV_LIEU": "1213, boulevard Hurtubise Est\r\nGatineau (Québec)",
+      "CODE_POST_LIEU": "J8P 7C2",
+      "LST_MRC_REG_ADM": "810 - Ville de Gatineau, 07 - Outaouais",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2140763",
+      "LATITUDE": 47.0143472591,
+      "LONGITUDE": -70.94666418599999,
+      "ADR_CIV_LIEU": "9300, boulevard Sainte-Anne\r\nSainte-Anne-de-Beaupré (Québec)",
+      "CODE_POST_LIEU": "G0A 3C0",
+      "LST_MRC_REG_ADM": "210 - La Côte-de-Beaupré, 03 - Capitale-Nationale",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2135466",
+      "LATITUDE": 47.4487756244,
+      "LONGITUDE": -70.5203509719,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "160 - Charlevoix, 03 - Capitale-Nationale",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2154009",
+      "LATITUDE": 46.0232514567,
+      "LONGITUDE": -73.1322793258,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "530 - Pierre-De Saurel, 16 - Montérégie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2148447",
+      "LATITUDE": 46.0862955595,
+      "LONGITUDE": -73.1729562993,
+      "ADR_CIV_LIEU": "201, rue Jacques-Cartier\r\nBerthierville (Québec)",
+      "CODE_POST_LIEU": "J0K 1A0",
+      "LST_MRC_REG_ADM": "520 - D'Autray, 14 - Lanaudière",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2195183",
+      "LATITUDE": 45.482838832400006,
+      "LONGITUDE": -71.66080815939999,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "410 - Le Haut-Saint-François, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "52732971",
+      "LATITUDE": 53.80559778200001,
+      "LONGITUDE": -73.57215254740001,
+      "ADR_CIV_LIEU": "LG4\r\nBaie-James (Québec)",
+      "CODE_POST_LIEU": "J0Y 3E0",
+      "LST_MRC_REG_ADM": "991 - Jamésie (terr. conventionné), 10 - Nord-du-Québec",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "X2152642",
+      "LATITUDE": 45.8447663046,
+      "LONGITUDE": -71.1463293947,
+      "ADR_CIV_LIEU": "0, Route 263\r\nLambton (Québec)",
+      "CODE_POST_LIEU": "G0M 1H0",
+      "LST_MRC_REG_ADM": "300 - Le Granit, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2183269",
+      "LATITUDE": 45.3946632537,
+      "LONGITUDE": -71.8921692439,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "430 - Ville de Sherbrooke, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "55486120",
+      "LATITUDE": 45.029008909000005,
+      "LONGITUDE": -72.6628667883,
+      "ADR_CIV_LIEU": "90, rue Thibault Sud\r\nAbercorn (Québec)",
+      "CODE_POST_LIEU": "J0E 1B0",
+      "LST_MRC_REG_ADM": "460 - Brome-Missisquoi, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "11630159",
+      "LATITUDE": 46.2569296369,
+      "LONGITUDE": -72.9374391748,
+      "ADR_CIV_LIEU": "700, boulevard Saint-Laurent Ouest\r\nLouiseville (Québec)",
+      "CODE_POST_LIEU": "J5V 1K7",
+      "LST_MRC_REG_ADM": "510 - Maskinongé, 04 - Mauricie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90506379",
+      "LATITUDE": 46.821626063400004,
+      "LONGITUDE": -71.2789219546,
+      "ADR_CIV_LIEU": "915, avenue Godin\r\nQuébec (Québec)",
+      "CODE_POST_LIEU": "G1M 2X2",
+      "LST_MRC_REG_ADM": "230 - Ville de Québec, 03 - Capitale-Nationale",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2080193",
+      "LATITUDE": 45.5493071548,
+      "LONGITUDE": -73.7571255925,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "11352739",
+      "LATITUDE": 45.4699737506,
+      "LONGITUDE": -73.8015274884,
+      "ADR_CIV_LIEU": "86, boulevard Hymus\r\nPointe-Claire (Québec)",
+      "CODE_POST_LIEU": "H9R 1E4",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Indéterminé",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "X0600294",
+      "LATITUDE": 45.6023755345,
+      "LONGITUDE": -73.6151124535,
+      "ADR_CIV_LIEU": "10833, avenue Moisan\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H1G 4N6",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2000638",
+      "LATITUDE": 51.8588040623,
+      "LONGITUDE": -63.2787418104,
+      "ADR_CIV_LIEU": "Lac Éon",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "981 - Minganie, 09 - Côte-Nord",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2199915",
+      "LATITUDE": 45.410050408800004,
+      "LONGITUDE": -71.8480209689,
+      "ADR_CIV_LIEU": "1837, rue King Est\r\nSherbrooke (Québec)",
+      "CODE_POST_LIEU": "J1G 5G7",
+      "LST_MRC_REG_ADM": "430 - Ville de Sherbrooke, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2196987",
+      "LATITUDE": 45.640319269,
+      "LONGITUDE": -72.5603728695,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "480 - Acton, 16 - Montérégie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2190159",
+      "LATITUDE": 45.289093012,
+      "LONGITUDE": -72.9592484315,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "460 - Brome-Missisquoi, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2014814",
+      "LATITUDE": 45.55429014760001,
+      "LONGITUDE": -71.9952759016,
+      "ADR_CIV_LIEU": "101, rue Principale Sud\r\nVal-Joli (Québec)",
+      "CODE_POST_LIEU": "J1S 0H2",
+      "LST_MRC_REG_ADM": "420 - Le Val-Saint-François, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "51666782",
+      "LATITUDE": 45.568066238300005,
+      "LONGITUDE": -73.5276882758,
+      "ADR_CIV_LIEU": "5781, rue Notre-Dame Est\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H1N 2C6",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "X2083655",
+      "LATITUDE": 45.5798804421,
+      "LONGITUDE": -73.7267494342,
+      "ADR_CIV_LIEU": "890, avenue Munck\r\nLaval (Québec)",
+      "CODE_POST_LIEU": "H7S 1B1",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2101972",
+      "LATITUDE": 45.251292686,
+      "LONGITUDE": -74.15028525650001,
+      "ADR_CIV_LIEU": "550, rue Victoria\r\nSalaberry-de-Valleyfield (Québec)",
+      "CODE_POST_LIEU": "J6T 1B8",
+      "LST_MRC_REG_ADM": "700 - Beauharnois-Salaberry, 16 - Montérégie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90344730",
+      "LATITUDE": 50.2089988162,
+      "LONGITUDE": -66.3058449238,
+      "ADR_CIV_LIEU": "rue des Pionniers\r\nSept-Îles",
+      "CODE_POST_LIEU": "D1D 1D1",
+      "LST_MRC_REG_ADM": "971 - Sept-Rivières, 09 - Côte-Nord",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X1700183",
+      "LATITUDE": 45.9182284636,
+      "LONGITUDE": -72.4423088997,
+      "ADR_CIV_LIEU": "2010, route 122\r\nSaint-Cyrille-de-Wendover (Québec)",
+      "CODE_POST_LIEU": "J1Z 1B8",
+      "LST_MRC_REG_ADM": "490 - Drummond, 17 - Centre-du-Québec",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "53052544",
+      "LATITUDE": 45.6202200774,
+      "LONGITUDE": -73.3932172717,
+      "ADR_CIV_LIEU": "1760, montée Sainte-Julie (Lionel-Boulet)\r\nVarennes (Québec)",
+      "CODE_POST_LIEU": "J3X 1S1",
+      "LST_MRC_REG_ADM": "590 - Marguerite-D'Youville, 16 - Montérégie",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "53125399",
+      "LATITUDE": 45.5226812152,
+      "LONGITUDE": -73.66186365819999,
+      "ADR_CIV_LIEU": "380, rue Deslauriers\r\nSaint-Laurent (Québec)",
+      "CODE_POST_LIEU": "H4N 1V8",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90494584",
+      "LATITUDE": 45.5808065465,
+      "LONGITUDE": -73.7849608256,
+      "ADR_CIV_LIEU": "509, rue Lindbergh\r\nLaval (Québec)",
+      "CODE_POST_LIEU": "H7P 2N8",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2101980",
+      "LATITUDE": 45.527053403800004,
+      "LONGITUDE": -73.6883644369,
+      "ADR_CIV_LIEU": "845, rue Poirier\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H4L 1G4",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "25015595",
+      "LATITUDE": 45.524243781200006,
+      "LONGITUDE": -73.5478580198,
+      "ADR_CIV_LIEU": "1295, rue de Lorimier\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H2K 3V9",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "X2004663",
+      "LATITUDE": 45.9413701823,
+      "LONGITUDE": -71.9883496856,
+      "ADR_CIV_LIEU": "173, rue Saint-Louis\r\nWarwick (Québec)",
+      "CODE_POST_LIEU": "J0A 1M0",
+      "LST_MRC_REG_ADM": "390 - Arthabaska, 17 - Centre-du-Québec",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 2.0
+    },
+    {
+      "NO_MEF_LIEU": "X2136427",
+      "LATITUDE": 45.4553508799,
+      "LONGITUDE": -73.8243760661,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2158588",
+      "LATITUDE": 45.3846007399,
+      "LONGITUDE": -75.80579067069999,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "810 - Ville de Gatineau, 07 - Outaouais",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90552183",
+      "LATITUDE": 45.52781735040001,
+      "LONGITUDE": -73.5618061688,
+      "ADR_CIV_LIEU": "2246, rue Cartier\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H2K 4E8",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2003910",
+      "LATITUDE": 45.5029093201,
+      "LONGITUDE": -72.2464525496,
+      "ADR_CIV_LIEU": "158, chemin Brompton\r\nRacine (Québec)",
+      "CODE_POST_LIEU": "J0E 1Y0",
+      "LST_MRC_REG_ADM": "420 - Le Val-Saint-François, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2178811",
+      "LATITUDE": 46.8172244529,
+      "LONGITUDE": -71.2508734212,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "230 - Ville de Québec, 03 - Capitale-Nationale",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "53108726",
+      "LATITUDE": 46.7678872547,
+      "LONGITUDE": -71.29119472880001,
+      "ADR_CIV_LIEU": "1170, route de l'Église\r\nQuébec (Québec)",
+      "CODE_POST_LIEU": "G1V 3W7",
+      "LST_MRC_REG_ADM": "230 - Ville de Québec, 03 - Capitale-Nationale",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2197507",
+      "LATITUDE": 45.392471947,
+      "LONGITUDE": -71.9589895041,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "430 - Ville de Sherbrooke, 05 - Estrie",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2004177",
+      "LATITUDE": 48.484291013800004,
+      "LONGITUDE": -71.7765546683,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "930 - Lac-Saint-Jean-Est, 02 - Saguenay--Lac-Saint-Jean",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2140036",
+      "LATITUDE": 45.4760341657,
+      "LONGITUDE": -73.59796244510001,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 12.0
+    },
+    {
+      "NO_MEF_LIEU": "X2013935",
+      "LATITUDE": 45.552744990200004,
+      "LONGITUDE": -73.54193249980001,
+      "ADR_CIV_LIEU": "2111, avenue de LaSalle\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H1V 2K6",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "54561170",
+      "LATITUDE": 45.462552709600004,
+      "LONGITUDE": -73.7004681583,
+      "ADR_CIV_LIEU": "3000, boulevard Jean-Baptiste-Deschamps\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H8T 1E2",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2177306",
+      "LATITUDE": 48.8156364753,
+      "LONGITUDE": -64.57082832670001,
+      "ADR_CIV_LIEU": "607, boulevard de York Ouest\r\nGaspé (Québec)",
+      "CODE_POST_LIEU": "G4X 2M5",
+      "LST_MRC_REG_ADM": "030 - La Côte-de-Gaspé, 11 - Gaspésie--Îles-de-la-Madeleine",
+      "DESC_MILIEU_RECEPT": "Eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "54917067",
+      "LATITUDE": 45.580752555,
+      "LONGITUDE": -73.7217698819,
+      "ADR_CIV_LIEU": "2075, avenue Francis-Hughes\r\nLaval (Québec)",
+      "CODE_POST_LIEU": "H7S 1N5",
+      "LST_MRC_REG_ADM": "650 - Ville de Laval, 13 - Laval",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "55608053",
+      "LATITUDE": 46.6832102589,
+      "LONGITUDE": -73.9399835066,
+      "ADR_CIV_LIEU": "621, boul. St-Georges\r\nSaint-Michel-des-Saints (Québec)",
+      "CODE_POST_LIEU": "J0K 3B0",
+      "LST_MRC_REG_ADM": "620 - Matawinie, 14 - Lanaudière",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "90453010",
+      "LATITUDE": 45.606575916800004,
+      "LONGITUDE": -73.5557045425,
+      "ADR_CIV_LIEU": "9980, rue Notre-Dame Est\r\nMontréal-Est (Québec)",
+      "CODE_POST_LIEU": "H1L 3R4",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2134482",
+      "LATITUDE": 45.465878633,
+      "LONGITUDE": -73.584319674,
+      "ADR_CIV_LIEU": "",
+      "CODE_POST_LIEU": "",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Indéterminé",
+      "NB_FICHES": 1.0
+    },
+    {
+      "NO_MEF_LIEU": "X2022896",
+      "LATITUDE": 45.644557429,
+      "LONGITUDE": -73.555834268,
+      "ADR_CIV_LIEU": "9685 boul. Henri-Bourassa Est\r\nMontréal (Québec)",
+      "CODE_POST_LIEU": "H1E 5W9",
+      "LST_MRC_REG_ADM": "660 - Ville de Montréal, 06 - Montréal",
+      "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
+      "NB_FICHES": 1.0
+    }
+  ],
+  "metadata": {
+    "source": "Registre des terrains contaminés - Gouvernement du Québec",
+    "source_url": "https://www.donneesquebec.ca/recherche/dataset/repertoire-des-terrains-contamines-gtc/resource/09afbfb6-eeac-44fb-86ef-d8b6ce4b739a/download/gtc.gpkg",
+    "city": "VALLÉE-DE-L'OR",
+    "total_records": 65,
+    "last_update": "2025-10-18T01:18:30.728088",
+    "generated_by": "download_gov_data.py",
+    "columns": [
+      "NO_MEF_LIEU",
+      "LATITUDE",
+      "LONGITUDE",
+      "ADR_CIV_LIEU",
+      "CODE_POST_LIEU",
+      "LST_MRC_REG_ADM",
+      "DESC_MILIEU_RECEPT",
+      "NB_FICHES"
+    ]
+  }
+}

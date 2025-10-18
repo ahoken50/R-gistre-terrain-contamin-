@@ -1,7 +1,6 @@
 // Importer les bibliothèques nécessaires
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 import "jspdf-autotable";
-import Papa from "papaparse";
 
 // Variables globales pour stocker les données
 let municipalData = [];
@@ -44,7 +43,7 @@ const generateReportBtn = document.getElementById('generate-report');
 async function loadMunicipalData() {
     try {
         console.log('📊 Chargement des données municipales...');
-        const response = await fetch('./data/municipal-data.json');
+        const response = await fetch('/data/municipal-data.json');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -78,7 +77,7 @@ async function loadMunicipalData() {
 async function loadGovernmentData() {
     try {
         console.log('🏛️ Chargement des données gouvernementales...');
-        const response = await fetch('./data/government-data.json');
+        const response = await fetch('/data/government-data.json');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -120,12 +119,15 @@ function compareAndCategorizeData() {
     
     // Créer un Set des références officielles pour recherche rapide
     const officialReferences = new Set(
-        governmentData.map(item => item.reference || item.Reference || item.ID)
+        governmentData.map(item => {
+            const ref = item.reference || item.Reference || item.ID || item.NO_MEF_LIEU;
+            return (ref || '').toString().trim().toLowerCase();
+        })
     );
     
     // Identifier les terrains non présents dans le registre officiel
     notInOfficialData = municipalData.filter(item => {
-        const ref = item.reference || '';
+        const ref = (item.reference || item.Reference || '').toString().trim().toLowerCase();
         return ref === '' || !officialReferences.has(ref);
     });
     
@@ -256,7 +258,7 @@ function filterGovernmentData() {
     const filteredData = governmentData.filter(item => {
         const adresse = (item.Adresse || item.adresse || '').toString().toLowerCase();
         const lot = (item.Lot || item.lot || '').toString().toLowerCase();
-        const reference = (item.Reference || item.reference || item.ID || '').toString().toLowerCase();
+        const reference = (item.Reference || item.reference || item.ID || item.NO_MEF_LIEU || '').toString().toLowerCase();
         
         return adresse.includes(addressValue) &&
                lot.includes(lotValue) &&

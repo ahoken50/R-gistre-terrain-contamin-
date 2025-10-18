@@ -1,85 +1,119 @@
 # Application de Gestion des Terrains Contaminés
 
-Cette application permet de consulter et gérer un répertoire de terrains contaminés en comparant les données municipales avec le registre officiel du gouvernement du Québec.
+Cette application permet de consulter et de comparer les terrains contaminés recensés par la Ville de Val-d'Or avec le registre officiel du gouvernement du Québec. Elle est optimisée pour un flux de travail 100 % statique : les données sont consolidées dans des fichiers JSON consommés directement par l'interface web.
 
-## Fonctionnalités
+## Fonctionnalités principales
 
-- Interface web avec plusieurs onglets pour différentes catégories de terrains
-- Comparaison automatique des données municipales avec le registre gouvernemental
-- Filtrage des données par différents critères
-- Export des données en PDF
-- Génération de rapports pour les demandes d'accès à l'information
-- Synchronisation mensuelle avec le registre officiel
+- 🎯 Vue synthétique des terrains municipaux, du registre gouvernemental et des écarts
+- 🔍 Filtres instantanés sur l'adresse, le lot ou la référence MENVIQ
+- 📄 Export PDF des tableaux et génération d'un rapport prêt pour les demandes d'accès à l'information
+- 🗂️ Interface de dépôt acceptant les fichiers **CSV** et **Excel** pour les données municipales
+- 🔁 Script Python automatisé pour télécharger et filtrer le registre gouvernemental (mise à jour mensuelle)
 
-## Structure de l'application
+## Structure du projet
 
 ```
 contaminated-lands-app/
+├── index.html                 # Application principale (entrée Vite)
+├── upload-data.html           # Page d'import municipal (entrée Vite)
 ├── public/
-│   └── index.html          # Page principale de l'application
+│   └── data/
+│       ├── government-data.json
+│       └── municipal-data.json
 ├── src/
-│   ├── app.js             # Logique principale de l'application
-│   └── firebase.js       # Configuration Firebase
+│   ├── app.js                 # Logique de l'application principale
+│   └── upload.js              # Logique de l'interface d'import
+├── scripts/
+│   └── health-check.js        # Vérifications automatiques (npm test)
 ├── functions/
-│   ├── monthly-sync.js    # Fonction de synchronisation mensuelle
-│   └── municipal-data.js # Fonction de gestion des données municipales
-├── package.json          # Dépendances et scripts npm
-└── README.md             # Documentation du projet
+│   ├── monthly-sync.js        # Wrapper Node pour la synchro mensuelle
+│   └── municipal-data.js      # Wrapper Node pour la génération municipale
+├── download_gov_data.py       # Pipeline GPKG → JSON pour Val-d'Or
+├── load_municipal_data.py     # Pipeline CSV → JSON (fallback CLI)
+├── Registre-des-terrains-contamines-Valdor.xlsx  # Export Excel généré
+├── vite.config.js             # Configuration Vite multi-pages
+└── package.json
 ```
 
-## Installation locale
+## Mise en route
 
-1. Clonez le dépôt :
+```bash
+npm install          # installe les dépendances front-end
+npm run dev          # lance le serveur de développement (Vite)
+# http://localhost:5173 pour l'application principale
+
+npm run build        # génère la version de production dans dist/
+npm run preview      # prévisualise le build localement
+```
+
+## Données municipales
+
+### Option 1 : Interface web
+
+1. Rendez-vous sur [`/upload-data.html`](./upload-data.html) (liens disponibles depuis l'application principale).
+2. Déposez un fichier **CSV, XLS ou XLSX** contenant les colonnes suivantes (dans l'ordre) :
+   `adresse, lot, reference, avis_decontamination, bureau_publicite, commentaires`
+3. Vérifiez l'aperçu puis téléchargez `municipal-data.json`.
+4. Remplacez `public/data/municipal-data.json` par le fichier téléchargé et déployez.
+
+### Option 2 : Ligne de commande
+
+1. Préparez un fichier `donnees-municipales.csv` (UTF-8, en-têtes identiques au modèle).
+2. Exécutez :
+   ```bash
+   python load_municipal_data.py
    ```
-   git clone [URL_DU_DEPOT]
-   ```
+3. Le script produit `public/data/municipal-data.json` et affiche un aperçu.
 
-2. Installez les dépendances :
-   ```
-   cd contaminated-lands-app
-   npm install
-   ```
+La commande `node functions/municipal-data.js` est un simple alias vers le script Python pour intégration dans des automatisations Node.
 
-3. Démarrez l'application :
-   ```
-   npm start
-   ```
+## Données gouvernementales (mise à jour mensuelle)
 
-4. Accédez à l'application via votre navigateur à l'adresse `http://localhost:3000`
+Le script Python `download_gov_data.py` :
 
-## Déploiement via GitHub
+1. Télécharge le fichier officiel GPKG (plus de 10 000 enregistrements).
+2. Filtre automatiquement les enregistrements correspondant à la ville de **Val-d'Or** (35 entrées au 18/10/2025) en se basant sur l'adresse et la MRC « La Vallée-de-l'Or ».
+3. Génère :
+   - `public/data/government-data.json` (consommé par l'application)
+   - `Registre-des-terrains-contamines-Valdor.xlsx` (export Excel complet)
 
-Cette application est conçue pour être déployée via GitHub Pages. Pour déployer :
+```bash
+python download_gov_data.py    # à exécuter une fois par mois
+```
 
-1. Créez un nouveau dépôt sur GitHub
-2. Poussez le code vers ce dépôt
-3. Configurez GitHub Pages pour utiliser la branche `main` et le dossier `/public`
+Pour une exécution planifiée côté Node (CI/CD, cron, etc.) :
 
-## Configuration Firebase
+```bash
+node functions/monthly-sync.js
+```
 
-Pour utiliser Firebase, vous devez :
+## Vérifications automatiques
 
-1. Créer un projet Firebase
-2. Remplacer les informations de configuration dans `src/firebase.js` avec celles de votre projet
-3. Activer Firestore et Storage dans la console Firebase
+Un test léger assure que les fichiers JSON critiques sont présents et correctement parsés :
 
-## Synchronisation mensuelle
+```bash
+npm test
+```
 
-La synchronisation mensuelle avec le registre gouvernemental est gérée par le fichier `functions/monthly-sync.js`. Dans un environnement de production, cette fonction devrait être exécutée via un service planifié comme Cloud Functions ou un cron job.
+La commande vérifie `public/data/municipal-data.json` et `public/data/government-data.json` et renvoie un code de sortie non nul en cas de problème.
 
 ## Technologies utilisées
 
-- HTML5, CSS3, JavaScript (ES6+)
-- Bootstrap 5 pour l'interface
-- Firebase pour le backend
-- jsPDF pour l'export PDF
-- PapaParse pour le traitement CSV
-- GDAL pour le traitement des fichiers GPKG
+- **Vite** + ES modules pour le développement front-end
+- **Bootstrap 5** pour l'interface utilisateur
+- **jsPDF** & **jspdf-autotable** pour les exports PDF
+- **PapaParse** & **SheetJS (xlsx)** pour l'import CSV/Excel côté navigateur
+- **GeoPandas / Pyogrio / Shapely** pour le traitement du GPKG gouvernemental
+- **Pandas** pour la génération de JSON/Excel
 
-## Auteur
+## Bonnes pratiques de déploiement
 
-[Votre nom ou le nom de votre entreprise]
+1. `python download_gov_data.py`
+2. Mettre à jour les données municipales via l'interface ou `load_municipal_data.py`
+3. `npm test`
+4. `npm run build`
+5. Déployer le contenu de `dist/` (ou configurer votre pipeline CI/CD en conséquence)
 
 ## Licence
 
-[Spécifiez la licence si applicable]
+Précisez ici la licence retenue pour le projet (ex. MIT, Apache 2.0, etc.).

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charger les données municipales - Val-d'Or</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        .drop-zone {
+            border: 3px dashed #007bff;
+            border-radius: 10px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            background-color: #e7f3ff;
+            border-color: #0056b3;
+        }
+        .data-preview {
+            max-height: 400px;
+            overflow: auto;
+            margin: 20px 0;
+        }
+        .btn-group-custom {
+            margin: 20px 0;
+        }
+        .alert-custom {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Charger les données municipales</h1>
+        <p class="lead">Importez votre fichier CSV ou Excel contenant les terrains contaminés de Val-d'Or</p>
+        
+        <hr>
+        
+        <!-- Zone de téléchargement -->
+        <div class="drop-zone" id="dropZone">
+            <h3>📁 Glissez-déposez votre fichier CSV ou Excel ici</h3>
+            <p>ou cliquez pour sélectionner un fichier</p>
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+        </div>
+        
+        <!-- Format attendu -->
+        <div class="alert alert-info">
+            <h5>📋 Format requis :</h5>
+            <p><strong>Colonnes attendues (dans cet ordre) :</strong></p>
+            <code>adresse,lot,reference,avis_decontamination,bureau_publicite,commentaires</code>
+            <p class="mt-2">Les fichiers Excel doivent contenir ces colonnes dans la première feuille.</p>
+            <p class="mt-2"><strong>Exemple CSV :</strong></p>
+            <code>"1185, des Foreurs","2299001","7610-08-01-17124-06","","12223243","Terrain commercial"</code>
+        </div>
+        
+        <!-- Modèle à télécharger -->
+        <div class="mb-3">
+            <a href="#" id="downloadTemplate" class="btn btn-outline-primary">
+                📥 Télécharger le modèle CSV
+            </a>
+        </div>
+        
+        <!-- Aperçu des données -->
+        <div id="previewSection" style="display: none;">
+            <h4>👀 Aperçu des données</h4>
+            <div id="dataStats" class="alert alert-success"></div>
+            <div class="data-preview">
+                <table class="table table-striped table-sm" id="previewTable">
+                    <thead class="table-dark"></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <!-- Boutons d'action -->
+            <div class="btn-group-custom">
+                <button id="downloadJson" class="btn btn-success btn-lg">
+                    💾 Télécharger municipal-data.json
+                </button>
+                <button id="cancelBtn" class="btn btn-secondary btn-lg ms-2">
+                    ❌ Annuler
+                </button>
+            </div>
+            
+            <!-- Instructions après téléchargement -->
+            <div class="alert alert-warning alert-custom" id="instructionsAfter" style="display: none;">
+                <h5>📌 Prochaines étapes :</h5>
+                <ol>
+                    <li>Le fichier <code>municipal-data.json</code> a été téléchargé</li>
+                    <li>Placez-le dans le dossier <code>public/data/</code> de votre projet</li>
+                    <li>Commitez et poussez vers GitHub :
+                        <pre class="mt-2 bg-dark text-white p-2 rounded">git add public/data/municipal-data.json
+git commit -m "chore: Mise à jour données municipales"
+git push origin main</pre>
+                    </li>
+                    <li>L'application affichera vos nouvelles données après le déploiement</li>
+                </ol>
+            </div>
+        </div>
+        
+        <!-- Messages d'erreur -->
+        <div id="errorSection" class="alert alert-danger" style="display: none;"></div>
+        
+        <hr class="mt-5">
+        
+        <div class="text-center">
+            <a href="index.html" class="btn btn-outline-secondary">
+                ← Retour à l'application
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/src/upload.js"></script>
+</body>
+</html>

@@ -184,6 +184,47 @@ function displayDataInTable(table, data) {
 }
 
 /**
+ * Afficher les données gouvernementales avec les bonnes colonnes
+ */
+function displayGovernmentData(table, data) {
+    const tbody = table.querySelector('tbody');
+    tbody.innerHTML = '';
+    
+    if (data.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 6;
+        cell.className = 'text-center text-muted';
+        cell.textContent = 'Aucune donnée disponible';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+    
+    data.forEach(item => {
+        const row = document.createElement('tr');
+        
+        // Colonnes spécifiques pour les données gouvernementales
+        const columns = [
+            item.NO_MEF_LIEU || item.reference || item.Reference || '',
+            item.ADR_CIV_LIEU || item.adresse || item.Adresse || '',
+            item.CODE_POST_LIEU || item.code_postal || '',
+            item.LST_MRC_REG_ADM || item.mrc_region || '',
+            item.DESC_MILIEU_RECEPT || item.milieu_recepteur || '',
+            item.NB_FICHES || item.nb_fiches || ''
+        ];
+        
+        columns.forEach(value => {
+            const cell = document.createElement('td');
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+        
+        tbody.appendChild(row);
+    });
+}
+
+/**
  * Filtrer les données municipales
  */
 function filterMunicipalData() {
@@ -222,7 +263,7 @@ function filterGovernmentData() {
                reference.includes(referenceValue);
     });
     
-    displayDataInTable(governmentTable, filteredData);
+    displayGovernmentData(governmentTable, filteredData);
 }
 
 /**
@@ -316,7 +357,7 @@ async function initializeApp() {
         
         // Afficher les données initiales
         displayDataInTable(municipalTable, municipalData);
-        displayDataInTable(governmentTable, governmentData);
+        displayGovernmentData(governmentTable, governmentData);
         displayDataInTable(notInOfficialTable, notInOfficialData);
         displayDataInTable(decontaminatedTable, decontaminatedData);
         

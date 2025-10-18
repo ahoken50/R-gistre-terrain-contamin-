@@ -653,11 +653,12 @@
   ],
   "metadata": {
     "source": "Registre des terrains contaminés - Gouvernement du Québec",
-    "source_url": "https://www.donneesquebec.ca/recherche/dataset/repertoire-des-terrains-contamines-gtc/resource/09afbfb6-eeac-44fb-86ef-d8b6ce4b739a/download/gtc.gpkg",
-    "city": "VALLÉE-DE-L'OR",
-    "total_records": 65,
-    "last_update": "2025-10-18T01:18:30.728088",
-    "generated_by": "download_gov_data.py",
+    "source_url": "https://stqc380donopppdtce01.blob.core.windows.net/donnees-ouvertes/Repertoire_terrains_contamines/RepertoireTerrainsContamines.gpkg.zip",
+    "city": "Val-d'Or",
+    "total_records_in_file": 65,
+    "valdor_records": 65,
+    "last_update": "2025-10-18T01:47:17.090077",
+    "generated_by": "download_gov_data_complete.py",
     "columns": [
       "NO_MEF_LIEU",
       "LATITUDE",

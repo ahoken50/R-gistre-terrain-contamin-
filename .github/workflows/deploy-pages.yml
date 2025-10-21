@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Uploader le dossier public
-          path: './public'
+          path: './dist'
       
       - name: Deploy to GitHub Pages
         id: deployment

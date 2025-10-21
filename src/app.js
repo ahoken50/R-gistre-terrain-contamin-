@@ -122,7 +122,22 @@ async function loadGovernmentData() {
         }
         
         const jsonData = await response.json();
+        
+        // Debug : afficher la structure des données
+        console.log('📦 Structure des données reçues:', {
+            hasData: !!jsonData.data,
+            isArray: Array.isArray(jsonData.data),
+            dataLength: jsonData.data ? jsonData.data.length : 'N/A',
+            metadata: jsonData.metadata
+        });
+        
         governmentData = jsonData.data || jsonData;
+        
+        // S'assurer que governmentData est un tableau
+        if (!Array.isArray(governmentData)) {
+            console.error('❌ governmentData n\'est pas un tableau:', typeof governmentData);
+            governmentData = [];
+        }
         
         console.log(`✅ ${governmentData.length} enregistrements gouvernementaux chargés`);
         
@@ -185,6 +200,13 @@ function compareAndCategorizeData() {
  * Mettre à jour les statistiques
  */
 function updateStatistics() {
+    console.log('📊 Mise à jour des statistiques:', {
+        municipal: municipalData.length,
+        government: governmentData.length,
+        notOfficial: notInOfficialData.length,
+        decontaminated: decontaminatedData.length
+    });
+    
     statsMunicipal.textContent = municipalData.length;
     statsGovernment.textContent = governmentData.length;
     statsNotOfficial.textContent = notInOfficialData.length;

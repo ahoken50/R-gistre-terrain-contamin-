@@ -43,6 +43,26 @@
         .btn-export {
             margin-bottom: 20px;
         }
+        /* Styles pour le tableau gouvernemental */
+        #government-table td {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #government-table td:nth-child(2) {
+            /* Colonne adresse - plus large */
+            max-width: 300px;
+        }
+        #government-table td:nth-child(4) {
+            /* Colonne MRC / Région - plus large */
+            max-width: 250px;
+        }
+        #government-table td:nth-child(1),
+        #government-table td:nth-child(3),
+        #government-table td:nth-child(6) {
+            /* Colonnes courtes : Référence, Code postal, Nb fiches */
+            max-width: 120px;
+        }
         .footer {
             text-align: center;
             margin-top: 30px;

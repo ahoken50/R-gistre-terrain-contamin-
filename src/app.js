@@ -224,6 +224,22 @@ function displayDataInTable(table, data) {
 }
 
 /**
+ * Nettoyer les adresses (enlever les retours de ligne)
+ */
+function cleanAddress(address) {
+    if (!address) return '';
+    return address.replace(/\r\n/g, ', ').replace(/\n/g, ', ').trim();
+}
+
+/**
+ * Formater les nombres (enlever les décimales inutiles)
+ */
+function formatNumber(num) {
+    if (!num) return '';
+    return Math.round(parseFloat(num)).toString();
+}
+
+/**
  * Afficher les données gouvernementales avec les bonnes colonnes
  */
 function displayGovernmentData(table, data) {
@@ -244,19 +260,26 @@ function displayGovernmentData(table, data) {
     data.forEach(item => {
         const row = document.createElement('tr');
         
-        // Colonnes spécifiques pour les données gouvernementales
+        // Colonnes spécifiques pour les données gouvernementales avec nettoyage
         const columns = [
             item.NO_MEF_LIEU || item.reference || item.Reference || '',
-            item.ADR_CIV_LIEU || item.adresse || item.Adresse || '',
+            cleanAddress(item.ADR_CIV_LIEU || item.adresse || item.Adresse || ''),
             item.CODE_POST_LIEU || item.code_postal || '',
             item.LST_MRC_REG_ADM || item.mrc_region || '',
             item.DESC_MILIEU_RECEPT || item.milieu_recepteur || '',
-            item.NB_FICHES || item.nb_fiches || ''
+            formatNumber(item.NB_FICHES || item.nb_fiches || '')
         ];
         
-        columns.forEach(value => {
+        columns.forEach((value, index) => {
             const cell = document.createElement('td');
             cell.textContent = value;
+            
+            // Ajouter un tooltip pour les textes longs (>50 caractères)
+            if (value && value.length > 50) {
+                cell.title = value;
+                cell.style.cursor = 'help';
+            }
+            
             row.appendChild(cell);
         });
         

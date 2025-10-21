@@ -8,7 +8,18 @@
       "CODE_POST_LIEU": "J9P 7A1",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "Plage B-C",
+      "CONTAM_SOL_EXTRA": "Produits pétroliers*,\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2001-10-30",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1569"
+      ],
+      "NO_SEQ_DOSSIER": "1569",
+      "ETAT_REHAB": "Terminée en 2001",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "90531229",
@@ -18,7 +29,18 @@
       "CODE_POST_LIEU": "J9P 4P3",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "Plage B-C",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2005-02-22",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=6476"
+      ],
+      "NO_SEQ_DOSSIER": "6476",
+      "ETAT_REHAB": "Terminée en 2001",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2050458",
@@ -28,7 +50,18 @@
       "CODE_POST_LIEU": "J9P 5B7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2021-06-17",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=6261"
+      ],
+      "NO_SEQ_DOSSIER": "6261",
+      "ETAT_REHAB": "Initiée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X0800591",
@@ -38,7 +71,18 @@
       "CODE_POST_LIEU": "J9P 4G7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "Plage B-C",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHydrocarbures légers*,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2012-04-04",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1546"
+      ],
+      "NO_SEQ_DOSSIER": "1546",
+      "ETAT_REHAB": "Terminée en 1996",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2003279",
@@ -48,7 +92,18 @@
       "CODE_POST_LIEU": "J9P 4P8",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "Plage B-C",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2008-07-09",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1559"
+      ],
+      "NO_SEQ_DOSSIER": "1559",
+      "ETAT_REHAB": "Terminée en 1995",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X0800957",
@@ -58,7 +113,18 @@
       "CODE_POST_LIEU": "J9P 5B7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "Plage B-C",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2000-12-06",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1561"
+      ],
+      "NO_SEQ_DOSSIER": "1561",
+      "ETAT_REHAB": "Terminée en 1995",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2059220",
@@ -68,7 +134,18 @@
       "CODE_POST_LIEU": "J9X 6X9",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "<= B",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2005-04-12",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=6310"
+      ],
+      "NO_SEQ_DOSSIER": "6310",
+      "ETAT_REHAB": "Terminée en 2004",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "90411067",
@@ -78,7 +155,18 @@
       "CODE_POST_LIEU": "J9P 5B7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "Plage B-C",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2018-10-03",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1526"
+      ],
+      "NO_SEQ_DOSSIER": "1526",
+      "ETAT_REHAB": "Terminée en 2017",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2159243",
@@ -88,7 +176,18 @@
       "CODE_POST_LIEU": "J9P 3X6",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Hydrocarbures aromatiques monocycliques*,\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50",
+      "DATE_CRE_MAJ": "2025-03-20",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=11535"
+      ],
+      "NO_SEQ_DOSSIER": "11535",
+      "ETAT_REHAB": "Initiée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X2003277",
@@ -98,7 +197,18 @@
       "CODE_POST_LIEU": "J9P 5B7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures aromatiques monocycliques * (pot),\r\nHydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "Hydrocarbures aromatiques monocycliques*,\r\nHydrocarbures pétroliers C10 à C50",
+      "DATE_CRE_MAJ": "2017-12-04",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1544"
+      ],
+      "NO_SEQ_DOSSIER": "1544",
+      "ETAT_REHAB": "Initiée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X2079855",
@@ -108,7 +218,18 @@
       "CODE_POST_LIEU": "J9P 3X4",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "Plage B-C",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nBenzène (seringue),\r\nÉthylbenzène (pot),\r\nÉthylbenzène (seringue),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot),\r\nXylènes (o,m,p) (seringue)",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nHydrocarbures aromatiques monocycliques*,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2021-07-21",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=9185"
+      ],
+      "NO_SEQ_DOSSIER": "9185",
+      "ETAT_REHAB": "Terminée en 2017",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2097152",
@@ -118,7 +239,18 @@
       "CODE_POST_LIEU": "J9P 3X4",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHuiles et graisses totales*,\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nHuiles et graisses totales*,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2017-12-04",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=8164"
+      ],
+      "NO_SEQ_DOSSIER": "8164",
+      "ETAT_REHAB": "Initiée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X2092999",
@@ -128,7 +260,18 @@
       "CODE_POST_LIEU": "J9P 3X4",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures aromatiques monocycliques * (pot),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2018-09-13",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=10684"
+      ],
+      "NO_SEQ_DOSSIER": "10684",
+      "ETAT_REHAB": "Non débutée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X0800914",
@@ -138,7 +281,18 @@
       "CODE_POST_LIEU": "J9P 3N3",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures légers*",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2000-08-16",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1512"
+      ],
+      "NO_SEQ_DOSSIER": "1512",
+      "ETAT_REHAB": "Terminée en 1992",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2094206",
@@ -148,7 +302,18 @@
       "CODE_POST_LIEU": "J9P 1W1",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "<= C",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2015-05-15",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=8147"
+      ],
+      "NO_SEQ_DOSSIER": "8147",
+      "ETAT_REHAB": "Terminée en 2012",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2107539",
@@ -158,7 +323,18 @@
       "CODE_POST_LIEU": "J9P 1R5",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> RESC",
+      "QUAL_SOLS": "> RESC",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2012-04-17",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=8914"
+      ],
+      "NO_SEQ_DOSSIER": "8914",
+      "ETAT_REHAB": "Terminée en 2008",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2068238",
@@ -168,7 +344,18 @@
       "CODE_POST_LIEU": "J9P 4T8",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "<= A",
+      "CONTAM_SOL_EXTRA": "Éthylbenzène (pot),\r\nHydrocarbures aromatiques polycycliques*,\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2005-06-17",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=6585"
+      ],
+      "NO_SEQ_DOSSIER": "6585",
+      "ETAT_REHAB": "Terminée en 2005",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X0800962",
@@ -178,7 +365,18 @@
       "CODE_POST_LIEU": "J9P 4N7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "> C",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2005-09-08",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1549"
+      ],
+      "NO_SEQ_DOSSIER": "1549",
+      "ETAT_REHAB": "Terminée en 1996",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X0800814",
@@ -188,7 +386,18 @@
       "CODE_POST_LIEU": "J9P 5B7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Cuivre (Cu),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50,\r\nZinc (Zn)",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2016-10-25",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=10653"
+      ],
+      "NO_SEQ_DOSSIER": "10653",
+      "ETAT_REHAB": "Non débutée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X0800885",
@@ -198,7 +407,18 @@
       "CODE_POST_LIEU": "J9P 4N7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2017-01-04",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1495"
+      ],
+      "NO_SEQ_DOSSIER": "1495",
+      "ETAT_REHAB": "Non nécessaire",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X0000009",
@@ -208,7 +428,18 @@
       "CODE_POST_LIEU": "J9P 0G3",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures aromatiques monocycliques * (pot),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures légers*,\r\nHydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2002-10-23",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1554"
+      ],
+      "NO_SEQ_DOSSIER": "1554",
+      "ETAT_REHAB": "Terminée en 2001",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "52486008",
@@ -218,7 +449,18 @@
       "CODE_POST_LIEU": "J9P 4N8",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Biphényles polychlorés (BPC),\r\nCuivre (Cu),\r\nHydrocarbures pétroliers C10 à C50,\r\nNickel (Ni)",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2000-08-16",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1528"
+      ],
+      "NO_SEQ_DOSSIER": "1528",
+      "ETAT_REHAB": "Terminée en 1993",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2022554",
@@ -228,7 +470,18 @@
       "CODE_POST_LIEU": "J9P 5A3",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Indéterminé",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> RESC",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2022-03-30",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=12777"
+      ],
+      "NO_SEQ_DOSSIER": "12777",
+      "ETAT_REHAB": "Non débutée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X0800888",
@@ -238,7 +491,18 @@
       "CODE_POST_LIEU": "J9P 7C4",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylène glycol,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2011-08-11",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1489"
+      ],
+      "NO_SEQ_DOSSIER": "1489",
+      "ETAT_REHAB": "Non débutée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X2058174",
@@ -248,7 +512,18 @@
       "CODE_POST_LIEU": "J9P 0B8",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> RESC",
+      "QUAL_SOLS": "<= C",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures aromatiques monocycliques * (pot),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "Benzène",
+      "DATE_CRE_MAJ": "2015-05-25",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=9180"
+      ],
+      "NO_SEQ_DOSSIER": "9180",
+      "ETAT_REHAB": "Initiée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X2004380",
@@ -258,7 +533,18 @@
       "CODE_POST_LIEU": "J0L 2E0",
       "LST_MRC_REG_ADM": "570 - La Vallée-du-Richelieu, 16 - Montérégie",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2001-07-18",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=4697"
+      ],
+      "NO_SEQ_DOSSIER": "4697",
+      "ETAT_REHAB": "Non débutée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X2091449",
@@ -268,7 +554,18 @@
       "CODE_POST_LIEU": "J9P 4P5",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "Plage A-B",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures aromatiques polycycliques*,\r\nProduits pétroliers*",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2009-03-31",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=7972"
+      ],
+      "NO_SEQ_DOSSIER": "7972",
+      "ETAT_REHAB": "Terminée en 2007",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2104903",
@@ -278,7 +575,18 @@
       "CODE_POST_LIEU": "J9P 7C3",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "<= C",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2009-09-11",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=8522"
+      ],
+      "NO_SEQ_DOSSIER": "8522",
+      "ETAT_REHAB": "Terminée en 2009",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2096333",
@@ -288,7 +596,18 @@
       "CODE_POST_LIEU": "J9P 1P6",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nBenzo(a)pyrène,\r\nDichloro-1,2 éthane,\r\nÉthylbenzène,\r\nManganèse (Mn),\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2016-05-12",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=8904"
+      ],
+      "NO_SEQ_DOSSIER": "8904",
+      "ETAT_REHAB": "Terminée en 2011",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "55044267",
@@ -298,7 +617,19 @@
       "CODE_POST_LIEU": "J9P 6V2",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 2.0
+      "NB_FICHES": 2.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Biphényles polychlorés (BPC),\r\nHydrocarbures pétroliers C10 à C50; Arsenic (As),\r\nCadmium (Cd),\r\nCobalt (Co),\r\nCuivre (Cu),\r\nHydrocarbures pétroliers C10 à C50,\r\nManganèse (Mn),\r\nMolybdène (Mo),\r\nSoufre total (S),\r\nZinc (Zn)",
+      "CONTAM_EAU_EXTRA": "Aluminium (Al),\r\nCobalt (Co),\r\nCuivre (Cu),\r\nNickel (Ni),\r\nSélénium (Se),\r\nZinc (Zn)",
+      "DATE_CRE_MAJ": "2011-08-11",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1533",
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=9188"
+      ],
+      "NO_SEQ_DOSSIER": "1533, 9188",
+      "ETAT_REHAB": "Terminée en 1993 | Terminée en 2007",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X0800901",
@@ -308,7 +639,18 @@
       "CODE_POST_LIEU": "J9P 0C2",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Hydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2000-08-16",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1496"
+      ],
+      "NO_SEQ_DOSSIER": "1496",
+      "ETAT_REHAB": "Terminée en 1993",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2069792",
@@ -318,7 +660,18 @@
       "CODE_POST_LIEU": "J9P 1S8",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "<= A",
+      "CONTAM_SOL_EXTRA": "Naphtalène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Éthylbenzène,\r\nToluène",
+      "DATE_CRE_MAJ": "2008-06-23",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=7913"
+      ],
+      "NO_SEQ_DOSSIER": "7913",
+      "ETAT_REHAB": "Terminée en 2007",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2069576",
@@ -328,7 +681,18 @@
       "CODE_POST_LIEU": "J9P 1T3",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "<= B",
+      "CONTAM_SOL_EXTRA": "Benzène (pot),\r\nÉthylbenzène (pot),\r\nHydrocarbures aromatiques polycycliques*,\r\nHydrocarbures pétroliers C10 à C50,\r\nToluène (pot),\r\nXylènes (o,m,p) (pot)",
+      "CONTAM_EAU_EXTRA": "Benzène,\r\nÉthylbenzène,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2022-12-14",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=6909"
+      ],
+      "NO_SEQ_DOSSIER": "6909",
+      "ETAT_REHAB": "Terminée en 2005",
+      "IS_DECONTAMINATED": true
     },
     {
       "NO_MEF_LIEU": "X2124507",
@@ -338,7 +702,18 @@
       "CODE_POST_LIEU": "J9P 1T3",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol et eau souterraine",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "> C",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Benzène (seringue),\r\nÉthylbenzène (seringue),\r\nMéthyl naphtalènes (chacun),\r\nToluène (seringue),\r\nTrichloro-1,1,2 éthane (seringue),\r\nXylènes (o,m,p) (seringue)",
+      "CONTAM_EAU_EXTRA": "Éthylbenzène,\r\nToluène,\r\nXylènes (o,m,p)",
+      "DATE_CRE_MAJ": "2023-03-15",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=12961"
+      ],
+      "NO_SEQ_DOSSIER": "12961",
+      "ETAT_REHAB": "Initiée",
+      "IS_DECONTAMINATED": false
     },
     {
       "NO_MEF_LIEU": "X0800950",
@@ -348,16 +723,42 @@
       "CODE_POST_LIEU": "J9P 4P7",
       "LST_MRC_REG_ADM": "890 - La Vallée-de-l'Or, 08 - Abitibi-Témiscamingue",
       "DESC_MILIEU_RECEPT": "Sol",
-      "NB_FICHES": 1.0
+      "NB_FICHES": 1.0,
+      "QUAL_SOLS_AV": "",
+      "QUAL_SOLS": "",
+      "CONTAM_SOL_EXTRA": "Biphényles polychlorés (BPC),\r\nHuiles et graisses totales*,\r\nHydrocarbures pétroliers C10 à C50",
+      "CONTAM_EAU_EXTRA": "",
+      "DATE_CRE_MAJ": "2005-09-08",
+      "FICHES_URLS": [
+        "https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no=1556"
+      ],
+      "NO_SEQ_DOSSIER": "1556",
+      "ETAT_REHAB": "Terminée en 1991",
+      "IS_DECONTAMINATED": true
     }
   ],
   "metadata": {
     "source": "Registre des terrains contaminés - Gouvernement du Québec",
     "source_url": "https://stqc380donopppdtce01.blob.core.windows.net/donnees-ouvertes/Repertoire_terrains_contamines/RepertoireTerrainsContamines.gpkg.zip",
     "city": "Val-d'Or",
-    "layer": "point",
+    "layers": [
+      "point",
+      "detailsFiches"
+    ],
     "total_records": 35,
-    "last_update": "2025-10-18T17:55:06+00:00",
-    "generated_by": "download_gov_data.py"
+    "decontaminated_count": 23,
+    "last_update": "2025-10-21T18:59:10+00:00",
+    "generated_by": "download_gov_data_with_fiches.py",
+    "new_fields": [
+      "ETAT_REHAB: État de la réhabilitation",
+      "QUAL_SOLS_AV: Qualité des sols avant réhabilitation",
+      "QUAL_SOLS: Qualité des sols après réhabilitation",
+      "CONTAM_SOL_EXTRA: Contaminants dans le sol",
+      "CONTAM_EAU_EXTRA: Contaminants dans l'eau",
+      "NO_SEQ_DOSSIER: Numéros de fiches (séparés par virgule)",
+      "FICHES_URLS: URLs des fiches consultables",
+      "IS_DECONTAMINATED: True si au moins une fiche indique réhabilitation terminée",
+      "DATE_CRE_MAJ: Date de dernière création/mise à jour"
+    ]
   }
 }

@@ -1,7 +1,11 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/R-gistre-terrain-contamin-/",
+  base: process.env.NODE_ENV === 'production' ? "/R-gistre-terrain-contamin-/" : "/",
+  server: {
+    host: '0.0.0.0',
+    port: 5173
+  },
   build: {
     rollupOptions: {
       input: {

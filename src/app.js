@@ -43,6 +43,22 @@ const generateReportBtn = document.getElementById('generate-report');
 async function loadMunicipalData() {
     try {
         console.log('📊 Chargement des données municipales...');
+        
+        // Vérifier d'abord si des données temporaires sont disponibles dans localStorage
+        const tempData = localStorage.getItem('temp_municipal_data');
+        if (tempData) {
+            console.log('🔄 Données temporaires trouvées dans localStorage');
+            const jsonData = JSON.parse(tempData);
+            municipalData = jsonData.data || jsonData;
+            console.log(`✅ ${municipalData.length} enregistrements municipaux chargés depuis localStorage`);
+            
+            // Afficher une notification pour informer l'utilisateur
+            showTempDataNotification();
+            
+            return municipalData;
+        }
+        
+        // Sinon, charger depuis le fichier JSON
         const response = await fetch('/data/municipal-data.json');
         
         if (!response.ok) {
@@ -69,6 +85,28 @@ async function loadMunicipalData() {
         ];
         return municipalData;
     }
+}
+
+/**
+ * Afficher une notification pour les données temporaires
+ */
+function showTempDataNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+    notification.style.zIndex = '9999';
+    notification.innerHTML = `
+        <strong>📊 Données chargées depuis l'upload</strong>
+        <p class="mb-0">Vous visualisez les données que vous venez de charger. Pour les rendre permanentes, téléchargez le fichier JSON et placez-le dans <code>public/data/</code>.</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notification);
+    
+    // Retirer la notification automatiquement après 10 secondes
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 10000);
 }
 
 /**

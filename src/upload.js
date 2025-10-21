@@ -235,8 +235,22 @@ downloadJsonBtn.addEventListener("click", () => {
     }
   };
 
+  // Sauvegarder dans localStorage pour utilisation immédiate
+  try {
+    localStorage.setItem('temp_municipal_data', JSON.stringify(payload));
+    console.log('✅ Données sauvegardées dans localStorage');
+  } catch (e) {
+    console.warn('⚠️ Impossible de sauvegarder dans localStorage:', e);
+  }
+
   downloadFile("municipal-data.json", JSON.stringify(payload, null, 2), "application/json");
   instructionsAfter.style.display = "block";
+  
+  // Afficher le bouton pour charger immédiatement
+  const loadNowBtn = document.getElementById("loadNowBtn");
+  if (loadNowBtn) {
+    loadNowBtn.style.display = "inline-block";
+  }
 });
 
 cancelBtn.addEventListener("click", () => {

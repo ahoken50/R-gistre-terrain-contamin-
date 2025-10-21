@@ -59,15 +59,22 @@
             max-width: 180px;
             white-space: nowrap;
         }
-        #government-table td:nth-child(5) {
+        #government-table td:nth-child(5),
+        #government-table td:nth-child(6) {
+            /* Colonnes Qualité avant/après */
+            max-width: 100px;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        #government-table td:nth-child(7) {
             /* Colonne Contaminants - plus large */
             max-width: 300px;
             font-size: 0.85rem;
         }
         #government-table td:nth-child(1),
         #government-table td:nth-child(3),
-        #government-table td:nth-child(7) {
-            /* Colonnes courtes : Référence, Code postal, Fiches */
+        #government-table td:nth-child(9) {
+            /* Colonnes courtes : Référence, Code postal, Consultation */
             max-width: 120px;
         }
         /* Liens vers les fiches */
@@ -121,6 +128,20 @@
             background: #888;
             border-radius: 3px;
         }
+        /* Badge pour qualité des sols */
+        .qual-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .qual-a { background-color: #198754; color: white; }
+        .qual-b { background-color: #ffc107; color: #000; }
+        .qual-c { background-color: #fd7e14; color: white; }
+        .qual-bc { background-color: #ff6b6b; color: white; }
+        .qual-empty { background-color: #6c757d; color: white; }
         /* Styles pour le tableau des terrains décontaminés */
         #decontaminated-table td,
         #pending-decontaminated-table td {
@@ -170,8 +191,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 Application de Gestion des Terrains Contaminés</h1>
-        <p class="lead text-center">Ville de Val-d'Or - Registre des terrains contaminés</p>
+        <div class="text-center mb-4">
+            <img src="/assets/valdor-logo.png" alt="Logo Ville de Val-d'Or" style="max-height: 120px; margin-bottom: 20px;">
+            <h1>📊 Application de Gestion des Terrains Contaminés</h1>
+            <p class="lead">Ville de Val-d'Or - Registre des terrains contaminés</p>
+        </div>
         <div class="text-center mb-3">
             <a href="upload-data.html" class="btn btn-primary">
                 📤 Charger vos données municipales
@@ -314,9 +338,11 @@
                                 <th>Adresse</th>
                                 <th>Code postal</th>
                                 <th>État réhabilitation</th>
+                                <th>Qualité avant</th>
+                                <th>Qualité après</th>
                                 <th>Contaminants (Sol)</th>
                                 <th>Milieu récepteur</th>
-                                <th>Fiches</th>
+                                <th>Consultation</th>
                             </tr>
                         </thead>
                         <tbody id="government-tbody">

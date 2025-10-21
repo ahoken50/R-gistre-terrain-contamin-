@@ -205,7 +205,8 @@ function compareAndCategorizeData() {
 
 /**
  * Identifier automatiquement les terrains décontaminés
- * Critères multiples pour détecter les terrains décontaminés
+ * Utilise les données officielles du registre gouvernemental (ETAT_REHAB, IS_DECONTAMINATED)
+ * et corrèle avec les commentaires municipaux
  */
 function identifyDecontaminatedLands(officialReferences) {
     console.log('🔍 Détection automatique des terrains décontaminés...');
@@ -217,6 +218,15 @@ function identifyDecontaminatedLands(officialReferences) {
     // Réinitialiser les listes
     decontaminatedData = [];
     pendingDecontaminatedData = [];
+    
+    // Créer une map des terrains gouvernementaux pour accès rapide
+    const govTerrainMap = new Map();
+    governmentData.forEach(terrain => {
+        const ref = (terrain.NO_MEF_LIEU || terrain.reference || '').toLowerCase();
+        if (ref) {
+            govTerrainMap.set(ref, terrain);
+        }
+    });
     
     municipalData.forEach((item, index) => {
         const itemId = `${item.adresse}_${item.lot}`;
@@ -230,28 +240,52 @@ function identifyDecontaminatedLands(officialReferences) {
         const hasDecontaminationNotice = item.avis_decontamination && 
                                         item.avis_decontamination.trim() !== '';
         
-        // Critère 2 : Commentaire mentionne "décontaminé"
+        // Critère 2 : Commentaire mentionne "décontaminé" ou "recu avis"
         const hasDecontaminationComment = item.commentaires && 
-                                         item.commentaires.toLowerCase().includes('décontaminé');
+                                         (item.commentaires.toLowerCase().includes('décontaminé') ||
+                                          item.commentaires.toLowerCase().includes('recu avis') ||
+                                          item.commentaires.toLowerCase().includes('reçu avis'));
         
-        // Critère 3 : Avait une référence mais n'est plus dans le registre gouvernemental
+        // Critère 3 : Référence dans le registre gouvernemental avec état "Terminée"
         const hadReference = item.reference && item.reference.trim() !== '';
-        const notInGovernmentRegistry = hadReference && 
-                                       !officialReferences.has(item.reference.toLowerCase());
+        const govTerrain = hadReference ? govTerrainMap.get(item.reference.toLowerCase()) : null;
+        const isDecontaminatedInGov = govTerrain && govTerrain.IS_DECONTAMINATED === true;
+        
+        // Critère 4 : Avait une référence mais n'est plus dans le registre gouvernemental
+        const notInGovernmentRegistry = hadReference && !officialReferences.has(item.reference.toLowerCase());
         
         // Déterminer si le terrain est potentiellement décontaminé
         let isDecontaminated = false;
         let confidence = 'low'; // low, medium, high
+        let detectionSource = '';
         
-        if (hasDecontaminationNotice && notInGovernmentRegistry) {
+        // Priorité 1 : Confirmation gouvernementale (IS_DECONTAMINATED = true)
+        if (isDecontaminatedInGov) {
             isDecontaminated = true;
             confidence = 'high';
-        } else if (hasDecontaminationNotice || (notInGovernmentRegistry && hasDecontaminationComment)) {
+            detectionSource = `✓ Registre gouvernemental (${govTerrain.ETAT_REHAB})`;
+        }
+        // Priorité 2 : Avis municipal + retiré du registre
+        else if (hasDecontaminationNotice && notInGovernmentRegistry) {
+            isDecontaminated = true;
+            confidence = 'high';
+            detectionSource = '✓ Avis de décontamination + Retiré du registre';
+        }
+        // Priorité 3 : Avis municipal seul OU commentaire + retiré
+        else if (hasDecontaminationNotice || (notInGovernmentRegistry && hasDecontaminationComment)) {
             isDecontaminated = true;
             confidence = 'medium';
-        } else if (notInGovernmentRegistry && hadReference) {
+            detectionSource = [
+                hasDecontaminationNotice ? '✓ Avis de décontamination' : null,
+                notInGovernmentRegistry ? '✓ Retiré du registre' : null,
+                hasDecontaminationComment ? '✓ Mention dans commentaires' : null
+            ].filter(Boolean).join(', ');
+        }
+        // Priorité 4 : Retiré du registre uniquement
+        else if (notInGovernmentRegistry && hadReference) {
             isDecontaminated = true;
             confidence = 'low';
+            detectionSource = '✓ Retiré du registre gouvernemental';
         }
         
         if (isDecontaminated) {
@@ -259,11 +293,9 @@ function identifyDecontaminatedLands(officialReferences) {
                 ...item,
                 _id: itemId,
                 _confidence: confidence,
-                _detection_criteria: [
-                    hasDecontaminationNotice ? '✓ Avis de décontamination' : null,
-                    notInGovernmentRegistry ? '✓ Retiré du registre gouvernemental' : null,
-                    hasDecontaminationComment ? '✓ Mention "décontaminé"' : null
-                ].filter(Boolean).join(', ')
+                _detection_criteria: detectionSource,
+                _gov_etat_rehab: govTerrain ? govTerrain.ETAT_REHAB : null,
+                _gov_fiches_urls: govTerrain ? govTerrain.FICHES_URLS : null
             };
             
             // Si déjà validé, ajouter à la liste validée
@@ -367,7 +399,7 @@ function displayGovernmentData(table, data) {
     if (data.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 6;
+        cell.colSpan = 7; // Augmenté pour les nouvelles colonnes
         cell.className = 'text-center text-muted';
         cell.textContent = 'Aucune donnée disponible';
         row.appendChild(cell);
@@ -378,28 +410,111 @@ function displayGovernmentData(table, data) {
     data.forEach(item => {
         const row = document.createElement('tr');
         
-        // Colonnes spécifiques pour les données gouvernementales avec nettoyage
-        const columns = [
-            item.NO_MEF_LIEU || item.reference || item.Reference || '',
-            cleanAddress(item.ADR_CIV_LIEU || item.adresse || item.Adresse || ''),
-            item.CODE_POST_LIEU || item.code_postal || '',
-            item.LST_MRC_REG_ADM || item.mrc_region || '',
-            item.DESC_MILIEU_RECEPT || item.milieu_recepteur || '',
-            formatNumber(item.NB_FICHES || item.nb_fiches || '')
-        ];
+        // Colonne 1: Référence
+        const refCell = document.createElement('td');
+        refCell.textContent = item.NO_MEF_LIEU || item.reference || item.Reference || '';
+        row.appendChild(refCell);
         
-        columns.forEach((value, index) => {
-            const cell = document.createElement('td');
-            cell.textContent = value;
+        // Colonne 2: Adresse
+        const addrCell = document.createElement('td');
+        const cleanAddr = cleanAddress(item.ADR_CIV_LIEU || item.adresse || item.Adresse || '');
+        addrCell.textContent = cleanAddr;
+        if (cleanAddr.length > 50) {
+            addrCell.title = cleanAddr;
+            addrCell.style.cursor = 'help';
+        }
+        row.appendChild(addrCell);
+        
+        // Colonne 3: Code postal
+        const postalCell = document.createElement('td');
+        postalCell.textContent = item.CODE_POST_LIEU || item.code_postal || '';
+        row.appendChild(postalCell);
+        
+        // Colonne 4: État de réhabilitation avec badge
+        const etatCell = document.createElement('td');
+        const etatRehab = item.ETAT_REHAB || '';
+        if (etatRehab) {
+            // Créer un badge selon l'état
+            if (etatRehab.includes('Terminée')) {
+                etatCell.innerHTML = `<span class="badge-decontamine" title="${etatRehab}">✅ ${etatRehab}</span>`;
+            } else if (etatRehab.includes('Initiée')) {
+                etatCell.innerHTML = `<span class="badge-en-cours" title="${etatRehab}">🔄 ${etatRehab}</span>`;
+            } else if (etatRehab.includes('Non débutée')) {
+                etatCell.innerHTML = `<span class="badge-non-debutee" title="${etatRehab}">⏸️ ${etatRehab}</span>`;
+            } else {
+                etatCell.textContent = etatRehab;
+            }
+        } else {
+            etatCell.textContent = 'N/D';
+            etatCell.style.color = '#999';
+        }
+        row.appendChild(etatCell);
+        
+        // Colonne 5: Contaminants (Sol)
+        const contamCell = document.createElement('td');
+        const contaminants = item.CONTAM_SOL_EXTRA || '';
+        if (contaminants) {
+            // Nettoyer et formater les contaminants
+            const contamList = contaminants
+                .replace(/\r\n/g, ', ')
+                .replace(/\n/g, ', ')
+                .split(',')
+                .map(c => c.trim())
+                .filter(c => c.length > 0)
+                .slice(0, 5); // Limiter à 5 premiers
             
-            // Ajouter un tooltip pour les textes longs (>50 caractères)
-            if (value && value.length > 50) {
-                cell.title = value;
-                cell.style.cursor = 'help';
+            const contamDiv = document.createElement('div');
+            contamDiv.className = 'contaminants-cell';
+            contamDiv.textContent = contamList.join(', ');
+            
+            // Ajouter "..." si plus de 5 contaminants
+            if (contaminants.split(',').length > 5) {
+                contamDiv.textContent += ', ...';
             }
             
-            row.appendChild(cell);
-        });
+            // Tooltip avec la liste complète
+            contamDiv.title = contaminants.replace(/\r\n/g, ', ').replace(/\n/g, ', ');
+            contamDiv.style.cursor = 'help';
+            
+            contamCell.appendChild(contamDiv);
+        } else {
+            contamCell.textContent = 'Non spécifié';
+            contamCell.style.color = '#999';
+        }
+        row.appendChild(contamCell);
+        
+        // Colonne 6: Milieu récepteur
+        const milieuCell = document.createElement('td');
+        milieuCell.textContent = item.DESC_MILIEU_RECEPT || item.milieu_recepteur || '';
+        row.appendChild(milieuCell);
+        
+        // Colonne 7: Fiches cliquables
+        const fichesCell = document.createElement('td');
+        const nbFiches = item.NB_FICHES || item.nb_fiches || 0;
+        const fichesUrls = item.FICHES_URLS || [];
+        
+        if (fichesUrls && fichesUrls.length > 0) {
+            fichesUrls.forEach((url, index) => {
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.className = 'fiche-link';
+                link.textContent = `Fiche ${index + 1}`;
+                link.title = `Consulter la fiche #${index + 1}`;
+                fichesCell.appendChild(link);
+                
+                if (index < fichesUrls.length - 1) {
+                    fichesCell.appendChild(document.createTextNode(' '));
+                }
+            });
+        } else if (nbFiches > 0) {
+            fichesCell.textContent = `${formatNumber(nbFiches)} fiche(s)`;
+            fichesCell.style.color = '#999';
+        } else {
+            fichesCell.textContent = 'Aucune';
+            fichesCell.style.color = '#999';
+        }
+        row.appendChild(fichesCell);
         
         tbody.appendChild(row);
     });

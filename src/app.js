@@ -2,6 +2,9 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+// Base URL pour les chemins (fonctionne en dev et prod avec GitHub Pages)
+const BASE_URL = import.meta.env.BASE_URL;
+
 // Variables globales pour stocker les données
 let municipalData = [];
 let governmentData = [];
@@ -59,7 +62,7 @@ async function loadMunicipalData() {
         }
         
         // Sinon, charger depuis le fichier JSON
-        const response = await fetch('/data/municipal-data.json');
+        const response = await fetch(BASE_URL + 'data/municipal-data.json');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -115,7 +118,7 @@ function showTempDataNotification() {
 async function loadGovernmentData() {
     try {
         console.log('🏛️ Chargement des données gouvernementales...');
-        const response = await fetch('/data/government-data.json');
+        const response = await fetch(BASE_URL + 'data/government-data.json');
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

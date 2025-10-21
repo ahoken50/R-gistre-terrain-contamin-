@@ -10,6 +10,7 @@ let municipalData = [];
 let governmentData = [];
 let notInOfficialData = [];
 let decontaminatedData = [];
+let pendingDecontaminatedData = []; // Terrains en attente de validation
 
 // Références aux éléments DOM
 const municipalTable = document.getElementById('municipal-table');
@@ -22,7 +23,11 @@ const statsMunicipal = document.getElementById('stats-municipal');
 const statsGovernment = document.getElementById('stats-government');
 const statsNotOfficial = document.getElementById('stats-not-official');
 const statsDecontaminated = document.getElementById('stats-decontaminated');
+const statsPendingDecontaminated = document.getElementById('stats-pending-decontaminated');
 const lastUpdateElement = document.getElementById('last-update');
+
+// Bouton de synchronisation
+const syncGovernmentBtn = document.getElementById('sync-government-data');
 
 // Références aux filtres
 const addressFilter = document.getElementById('address-filter');
@@ -187,16 +192,93 @@ function compareAndCategorizeData() {
         return ref === '' || !officialReferences.has(ref);
     });
     
-    // Identifier les terrains décontaminés (avec date d'avis)
-    decontaminatedData = municipalData.filter(item => {
-        return item.avis_decontamination && item.avis_decontamination !== '';
-    });
+    // Identifier automatiquement les terrains potentiellement décontaminés
+    identifyDecontaminatedLands(officialReferences);
     
     console.log(`📋 Catégorisation terminée :`);
     console.log(`  - Terrains municipaux: ${municipalData.length}`);
     console.log(`  - Terrains gouvernementaux: ${governmentData.length}`);
     console.log(`  - Terrains non officiels: ${notInOfficialData.length}`);
-    console.log(`  - Terrains décontaminés: ${decontaminatedData.length}`);
+    console.log(`  - Terrains décontaminés validés: ${decontaminatedData.length}`);
+    console.log(`  - Terrains en attente de validation: ${pendingDecontaminatedData.length}`);
+}
+
+/**
+ * Identifier automatiquement les terrains décontaminés
+ * Critères multiples pour détecter les terrains décontaminés
+ */
+function identifyDecontaminatedLands(officialReferences) {
+    console.log('🔍 Détection automatique des terrains décontaminés...');
+    
+    // Récupérer les terrains déjà validés depuis localStorage
+    const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
+    const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    // Réinitialiser les listes
+    decontaminatedData = [];
+    pendingDecontaminatedData = [];
+    
+    municipalData.forEach((item, index) => {
+        const itemId = `${item.adresse}_${item.lot}`;
+        
+        // Si déjà rejeté, ignorer
+        if (rejectedIds.includes(itemId)) {
+            return;
+        }
+        
+        // Critère 1 : A une date d'avis de décontamination
+        const hasDecontaminationNotice = item.avis_decontamination && 
+                                        item.avis_decontamination.trim() !== '';
+        
+        // Critère 2 : Commentaire mentionne "décontaminé"
+        const hasDecontaminationComment = item.commentaires && 
+                                         item.commentaires.toLowerCase().includes('décontaminé');
+        
+        // Critère 3 : Avait une référence mais n'est plus dans le registre gouvernemental
+        const hadReference = item.reference && item.reference.trim() !== '';
+        const notInGovernmentRegistry = hadReference && 
+                                       !officialReferences.has(item.reference.toLowerCase());
+        
+        // Déterminer si le terrain est potentiellement décontaminé
+        let isDecontaminated = false;
+        let confidence = 'low'; // low, medium, high
+        
+        if (hasDecontaminationNotice && notInGovernmentRegistry) {
+            isDecontaminated = true;
+            confidence = 'high';
+        } else if (hasDecontaminationNotice || (notInGovernmentRegistry && hasDecontaminationComment)) {
+            isDecontaminated = true;
+            confidence = 'medium';
+        } else if (notInGovernmentRegistry && hadReference) {
+            isDecontaminated = true;
+            confidence = 'low';
+        }
+        
+        if (isDecontaminated) {
+            const enrichedItem = {
+                ...item,
+                _id: itemId,
+                _confidence: confidence,
+                _detection_criteria: [
+                    hasDecontaminationNotice ? '✓ Avis de décontamination' : null,
+                    notInGovernmentRegistry ? '✓ Retiré du registre gouvernemental' : null,
+                    hasDecontaminationComment ? '✓ Mention "décontaminé"' : null
+                ].filter(Boolean).join(', ')
+            };
+            
+            // Si déjà validé, ajouter à la liste validée
+            if (validatedIds.includes(itemId)) {
+                decontaminatedData.push(enrichedItem);
+            } else {
+                // Sinon, ajouter à la liste en attente
+                pendingDecontaminatedData.push(enrichedItem);
+            }
+        }
+    });
+    
+    console.log(`✅ Détection terminée:`);
+    console.log(`  - ${decontaminatedData.length} terrains décontaminés validés`);
+    console.log(`  - ${pendingDecontaminatedData.length} terrains en attente de validation`);
 }
 
 /**
@@ -207,13 +289,24 @@ function updateStatistics() {
         municipal: municipalData.length,
         government: governmentData.length,
         notOfficial: notInOfficialData.length,
-        decontaminated: decontaminatedData.length
+        decontaminated: decontaminatedData.length,
+        pending: pendingDecontaminatedData.length
     });
     
     statsMunicipal.textContent = municipalData.length;
     statsGovernment.textContent = governmentData.length;
     statsNotOfficial.textContent = notInOfficialData.length;
     statsDecontaminated.textContent = decontaminatedData.length;
+    
+    // Afficher le badge de notification pour les terrains en attente
+    if (statsPendingDecontaminated) {
+        statsPendingDecontaminated.textContent = pendingDecontaminatedData.length;
+        if (pendingDecontaminatedData.length > 0) {
+            statsPendingDecontaminated.classList.add('badge', 'bg-warning');
+        } else {
+            statsPendingDecontaminated.classList.remove('badge', 'bg-warning');
+        }
+    }
 }
 
 /**
@@ -313,6 +406,204 @@ function displayGovernmentData(table, data) {
 }
 
 /**
+ * Afficher les terrains décontaminés avec badges de statut et actions de validation
+ */
+function displayDecontaminatedData(table, data, showValidationButtons = false) {
+    const tbody = table.querySelector('tbody');
+    tbody.innerHTML = '';
+    
+    if (data.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = showValidationButtons ? 9 : 8;
+        cell.className = 'text-center text-muted';
+        cell.textContent = 'Aucune donnée disponible';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+    
+    data.forEach((item, index) => {
+        const row = document.createElement('tr');
+        
+        // Badge de statut selon la confiance
+        const hasNotice = item.avis_decontamination && item.avis_decontamination !== '';
+        let statusBadge;
+        if (item._confidence === 'high') {
+            statusBadge = '<span class="badge bg-success" title="Avis de décontamination + Retiré du registre">🟢 Confirmé</span>';
+        } else if (item._confidence === 'medium') {
+            statusBadge = '<span class="badge bg-warning text-dark" title="Avis OU mention + retrait">🟡 Probable</span>';
+        } else {
+            statusBadge = '<span class="badge bg-secondary" title="Retiré du registre uniquement">⚪ Présumé</span>';
+        }
+        
+        const decontaminationDate = item.avis_decontamination 
+            ? formatDate(item.avis_decontamination)
+            : 'Non spécifiée';
+        
+        // Colonnes
+        const columns = [
+            item.adresse || '',
+            item.lot || '',
+            item.reference || 'N/A',
+            decontaminationDate,
+            item.bureau_publicite || '',
+            statusBadge,
+            item._detection_criteria || '',
+            item.commentaires || ''
+        ];
+        
+        columns.forEach((value, colIndex) => {
+            const cell = document.createElement('td');
+            if (colIndex === 5) { // Badge HTML
+                cell.innerHTML = value;
+            } else {
+                cell.textContent = value;
+            }
+            
+            // Tooltip pour textes longs
+            if (typeof value === 'string' && value.length > 50) {
+                cell.title = value;
+                cell.style.cursor = 'help';
+            }
+            
+            row.appendChild(cell);
+        });
+        
+        // Ajouter les boutons de validation si demandé
+        if (showValidationButtons) {
+            const actionsCell = document.createElement('td');
+            actionsCell.innerHTML = `
+                <button class="btn btn-sm btn-success me-1" onclick="validateDecontamination('${item._id}')">
+                    ✓ Valider
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="rejectDecontamination('${item._id}')">
+                    ✗ Rejeter
+                </button>
+            `;
+            row.appendChild(actionsCell);
+        }
+        
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Formater une date au format français
+ */
+function formatDate(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-CA');
+    } catch (e) {
+        return dateString;
+    }
+}
+
+/**
+ * Valider un terrain décontaminé
+ */
+window.validateDecontamination = function(itemId) {
+    console.log(`✅ Validation du terrain: ${itemId}`);
+    
+    // Récupérer les listes
+    const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
+    const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    // Ajouter à la liste validée
+    if (!validatedIds.includes(itemId)) {
+        validatedIds.push(itemId);
+    }
+    
+    // Retirer de la liste rejetée si présent
+    const rejectedIndex = rejectedIds.indexOf(itemId);
+    if (rejectedIndex > -1) {
+        rejectedIds.splice(rejectedIndex, 1);
+    }
+    
+    // Sauvegarder
+    localStorage.setItem('validated_decontaminated', JSON.stringify(validatedIds));
+    localStorage.setItem('rejected_decontaminated', JSON.stringify(rejectedIds));
+    
+    // Rafraîchir l'affichage
+    compareAndCategorizeData();
+    updateStatistics();
+    displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    displayPendingDecontaminatedData();
+    
+    showNotification('Terrain validé avec succès!', 'success');
+}
+
+/**
+ * Rejeter un terrain décontaminé
+ */
+window.rejectDecontamination = function(itemId) {
+    console.log(`❌ Rejet du terrain: ${itemId}`);
+    
+    // Récupérer les listes
+    const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
+    const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    // Ajouter à la liste rejetée
+    if (!rejectedIds.includes(itemId)) {
+        rejectedIds.push(itemId);
+    }
+    
+    // Retirer de la liste validée si présent
+    const validatedIndex = validatedIds.indexOf(itemId);
+    if (validatedIndex > -1) {
+        validatedIds.splice(validatedIndex, 1);
+    }
+    
+    // Sauvegarder
+    localStorage.setItem('validated_decontaminated', JSON.stringify(validatedIds));
+    localStorage.setItem('rejected_decontaminated', JSON.stringify(rejectedIds));
+    
+    // Rafraîchir l'affichage
+    compareAndCategorizeData();
+    updateStatistics();
+    displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    displayPendingDecontaminatedData();
+    
+    showNotification('Terrain rejeté', 'info');
+}
+
+/**
+ * Afficher une notification temporaire
+ */
+function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                      type === 'danger' ? 'alert-danger' : 
+                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    notification.style.zIndex = '9999';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+/**
+ * Afficher les terrains en attente de validation dans un tableau séparé
+ */
+function displayPendingDecontaminatedData() {
+    const pendingTable = document.getElementById('pending-decontaminated-table');
+    if (pendingTable) {
+        displayDecontaminatedData(pendingTable, pendingDecontaminatedData, true);
+    }
+}
+
+/**
  * Filtrer les données municipales
  */
 function filterMunicipalData() {
@@ -352,6 +643,147 @@ function filterGovernmentData() {
     });
     
     displayGovernmentData(governmentTable, filteredData);
+}
+
+/**
+ * Filtrer les terrains décontaminés (Phase 2)
+ */
+function filterDecontaminatedData() {
+    const addressFilter = document.getElementById('decontaminated-address-filter');
+    const yearFilter = document.getElementById('decontaminated-year-filter');
+    const statusFilter = document.getElementById('decontaminated-status-filter');
+    
+    if (!addressFilter) return; // Si les filtres n'existent pas encore
+    
+    const addressValue = addressFilter.value.toLowerCase();
+    const yearValue = yearFilter.value;
+    const statusValue = statusFilter.value;
+    
+    const filteredData = decontaminatedData.filter(item => {
+        const adresse = (item.adresse || '').toString().toLowerCase();
+        const matchAddress = adresse.includes(addressValue);
+        
+        let matchYear = true;
+        if (yearValue && item.avis_decontamination) {
+            const itemYear = new Date(item.avis_decontamination).getFullYear().toString();
+            matchYear = itemYear === yearValue;
+        }
+        
+        let matchStatus = true;
+        if (statusValue) {
+            matchStatus = item._confidence === statusValue;
+        }
+        
+        return matchAddress && matchYear && matchStatus;
+    });
+    
+    displayDecontaminatedData(decontaminatedTable, filteredData, false);
+    
+    // Mettre à jour le compteur
+    const countElement = document.getElementById('decontaminated-filtered-count');
+    if (countElement) {
+        countElement.textContent = filteredData.length;
+    }
+}
+
+/**
+ * Synchroniser les données gouvernementales
+ * Recharge les données depuis le serveur et recatégorise tout
+ */
+async function synchronizeGovernmentData() {
+    console.log('🔄 Synchronisation des données gouvernementales...');
+    
+    // Afficher un indicateur de chargement
+    if (syncGovernmentBtn) {
+        syncGovernmentBtn.disabled = true;
+        syncGovernmentBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Synchronisation...';
+    }
+    
+    try {
+        // Forcer le rechargement en ajoutant un timestamp pour éviter le cache
+        const timestamp = new Date().getTime();
+        const response = await fetch(BASE_URL + `data/government-data.json?t=${timestamp}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const jsonData = await response.json();
+        governmentData = jsonData.data || jsonData;
+        
+        console.log(`✅ ${governmentData.length} enregistrements gouvernementaux rechargés`);
+        
+        // Mettre à jour la date
+        if (jsonData.metadata && jsonData.metadata.last_update) {
+            const updateDate = new Date(jsonData.metadata.last_update);
+            lastUpdateElement.textContent = updateDate.toLocaleDateString('fr-CA') + ' à ' + 
+                                            updateDate.toLocaleTimeString('fr-CA');
+        }
+        
+        // Recatégoriser toutes les données
+        compareAndCategorizeData();
+        updateStatistics();
+        
+        // Rafraîchir tous les affichages
+        displayGovernmentData(governmentTable, governmentData);
+        displayDataInTable(notInOfficialTable, notInOfficialData);
+        displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+        displayPendingDecontaminatedData();
+        
+        showNotification('Données gouvernementales synchronisées avec succès!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la synchronisation:', error);
+        showNotification('Erreur lors de la synchronisation des données', 'danger');
+    } finally {
+        // Restaurer le bouton
+        if (syncGovernmentBtn) {
+            syncGovernmentBtn.disabled = false;
+            syncGovernmentBtn.innerHTML = '🔄 Synchroniser les données';
+        }
+    }
+}
+
+/**
+ * Calculer les statistiques annuelles de décontamination (Phase 2)
+ */
+function calculateDecontaminationStats() {
+    const statsByYear = {};
+    
+    decontaminatedData.forEach(item => {
+        if (item.avis_decontamination) {
+            try {
+                const year = new Date(item.avis_decontamination).getFullYear();
+                statsByYear[year] = (statsByYear[year] || 0) + 1;
+            } catch (e) {
+                // Ignorer les dates invalides
+            }
+        }
+    });
+    
+    // Afficher les statistiques
+    const statsContainer = document.getElementById('decontamination-yearly-stats');
+    if (statsContainer) {
+        const years = Object.keys(statsByYear).sort().reverse();
+        let html = '<h6>📊 Statistiques annuelles</h6><div class="row">';
+        
+        years.forEach(year => {
+            html += `
+                <div class="col-md-3 mb-2">
+                    <div class="card">
+                        <div class="card-body p-2 text-center">
+                            <h6 class="mb-0">${year}</h6>
+                            <h4 class="mb-0 text-primary">${statsByYear[year]}</h4>
+                            <small class="text-muted">terrain${statsByYear[year] > 1 ? 's' : ''}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        statsContainer.innerHTML = html;
+    }
 }
 
 /**
@@ -447,7 +879,11 @@ async function initializeApp() {
         displayDataInTable(municipalTable, municipalData);
         displayGovernmentData(governmentTable, governmentData);
         displayDataInTable(notInOfficialTable, notInOfficialData);
-        displayDataInTable(decontaminatedTable, decontaminatedData);
+        displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+        displayPendingDecontaminatedData();
+        
+        // Calculer les statistiques de décontamination
+        calculateDecontaminationStats();
         
         // Ajouter les écouteurs d'événements pour les filtres
         addressFilter.addEventListener('input', filterMunicipalData);
@@ -457,6 +893,21 @@ async function initializeApp() {
         governmentAddressFilter.addEventListener('input', filterGovernmentData);
         governmentLotFilter.addEventListener('input', filterGovernmentData);
         governmentReferenceFilter.addEventListener('input', filterGovernmentData);
+        
+        // Ajouter les écouteurs pour les filtres décontaminés (Phase 2)
+        const decontaminatedAddressFilter = document.getElementById('decontaminated-address-filter');
+        const decontaminatedYearFilter = document.getElementById('decontaminated-year-filter');
+        const decontaminatedStatusFilter = document.getElementById('decontaminated-status-filter');
+        
+        if (decontaminatedAddressFilter) {
+            decontaminatedAddressFilter.addEventListener('input', filterDecontaminatedData);
+        }
+        if (decontaminatedYearFilter) {
+            decontaminatedYearFilter.addEventListener('change', filterDecontaminatedData);
+        }
+        if (decontaminatedStatusFilter) {
+            decontaminatedStatusFilter.addEventListener('change', filterDecontaminatedData);
+        }
         
         // Ajouter les écouteurs d'événements pour les exports PDF
         exportPdfMunicipalBtn.addEventListener('click', () => 
@@ -470,6 +921,11 @@ async function initializeApp() {
         
         // Ajouter l'écouteur d'événement pour la génération de rapport
         generateReportBtn.addEventListener('click', generateAccessReport);
+        
+        // Ajouter l'écouteur pour le bouton de synchronisation
+        if (syncGovernmentBtn) {
+            syncGovernmentBtn.addEventListener('click', synchronizeGovernmentData);
+        }
         
         console.log('✅ Application initialisée avec succès !');
         

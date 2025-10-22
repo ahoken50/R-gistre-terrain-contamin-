@@ -233,6 +233,12 @@ function identifyDecontaminatedLands(officialReferences) {
         }
     });
     
+    // DIAGNOSTIC: Compter les terrains avec chaque critère
+    let countWithNotice = 0;
+    let countWithComment = 0;
+    let countWithReference = 0;
+    let countIsDecontaminatedInGov = 0;
+    
     municipalData.forEach((item, index) => {
         const itemId = `${item.adresse}_${item.lot}`;
         
@@ -244,17 +250,21 @@ function identifyDecontaminatedLands(officialReferences) {
         // Critère 1 : A une date d'avis de décontamination
         const hasDecontaminationNotice = item.avis_decontamination && 
                                         item.avis_decontamination.trim() !== '';
+        if (hasDecontaminationNotice) countWithNotice++;
         
         // Critère 2 : Commentaire mentionne "décontaminé" ou "recu avis"
         const hasDecontaminationComment = item.commentaires && 
                                          (item.commentaires.toLowerCase().includes('décontaminé') ||
                                           item.commentaires.toLowerCase().includes('recu avis') ||
                                           item.commentaires.toLowerCase().includes('reçu avis'));
+        if (hasDecontaminationComment) countWithComment++;
         
         // Critère 3 : Référence dans le registre gouvernemental avec état "Terminée"
         const hadReference = item.reference && item.reference.trim() !== '';
+        if (hadReference) countWithReference++;
         const govTerrain = hadReference ? govTerrainMap.get(item.reference.toLowerCase()) : null;
         const isDecontaminatedInGov = govTerrain && govTerrain.IS_DECONTAMINATED === true;
+        if (isDecontaminatedInGov) countIsDecontaminatedInGov++;
         
         // Critère 4 : Avait une référence mais n'est plus dans le registre gouvernemental
         const notInGovernmentRegistry = hadReference && !officialReferences.has(item.reference.toLowerCase());
@@ -313,6 +323,11 @@ function identifyDecontaminatedLands(officialReferences) {
         }
     });
     
+    console.log(`📋 DIAGNOSTIC des critères de détection:`);
+    console.log(`  - Terrains avec avis de décontamination: ${countWithNotice}`);
+    console.log(`  - Terrains avec mention dans commentaires: ${countWithComment}`);
+    console.log(`  - Terrains avec référence MENVIQ: ${countWithReference}`);
+    console.log(`  - Terrains décontaminés dans registre gouv (IS_DECONTAMINATED=true): ${countIsDecontaminatedInGov}`);
     console.log(`✅ Détection terminée:`);
     console.log(`  - ${decontaminatedData.length} terrains décontaminés validés`);
     console.log(`  - ${pendingDecontaminatedData.length} terrains en attente de validation`);

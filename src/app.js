@@ -300,25 +300,27 @@ function identifyDecontaminatedLands(officialReferences) {
         
         // Critère 1 : A une date d'avis de décontamination
         const hasDecontaminationNotice = avisDecontamination && 
-                                        avisDecontamination.trim() !== '';
+                                        String(avisDecontamination).trim() !== '';
         if (hasDecontaminationNotice) countWithNotice++;
         
         // Critère 2 : Commentaire mentionne "décontaminé" ou "recu avis"
-        const hasDecontaminationComment = commentaires && 
-                                         (commentaires.toLowerCase().includes('décontaminé') ||
-                                          commentaires.toLowerCase().includes('recu avis') ||
-                                          commentaires.toLowerCase().includes('reçu avis'));
+        const commentairesStr = commentaires ? String(commentaires).toLowerCase() : '';
+        const hasDecontaminationComment = commentairesStr && 
+                                         (commentairesStr.includes('décontaminé') ||
+                                          commentairesStr.includes('recu avis') ||
+                                          commentairesStr.includes('reçu avis'));
         if (hasDecontaminationComment) countWithComment++;
         
         // Critère 3 : Référence dans le registre gouvernemental avec état "Terminée"
-        const hadReference = reference && reference.trim() !== '';
+        const referenceStr = reference ? String(reference).trim() : '';
+        const hadReference = referenceStr !== '';
         if (hadReference) countWithReference++;
-        const govTerrain = hadReference ? govTerrainMap.get(reference.toLowerCase()) : null;
+        const govTerrain = hadReference ? govTerrainMap.get(referenceStr.toLowerCase()) : null;
         const isDecontaminatedInGov = govTerrain && govTerrain.IS_DECONTAMINATED === true;
         if (isDecontaminatedInGov) countIsDecontaminatedInGov++;
         
         // Critère 4 : Avait une référence mais n'est plus dans le registre gouvernemental
-        const notInGovernmentRegistry = hadReference && !officialReferences.has(reference.toLowerCase());
+        const notInGovernmentRegistry = hadReference && !officialReferences.has(referenceStr.toLowerCase());
         
         // Déterminer si le terrain est potentiellement décontaminé
         let isDecontaminated = false;

@@ -210,10 +210,15 @@ function compareAndCategorizeData() {
  */
 function identifyDecontaminatedLands(officialReferences) {
     console.log('🔍 Détection automatique des terrains décontaminés...');
+    console.log('📊 Données municipales disponibles:', municipalData.length);
+    console.log('📊 Données gouvernementales disponibles:', governmentData.length);
     
     // Récupérer les terrains déjà validés depuis localStorage
     const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
     const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    console.log('💾 localStorage validés:', validatedIds.length);
+    console.log('💾 localStorage rejetés:', rejectedIds.length);
     
     // Réinitialiser les listes
     decontaminatedData = [];
@@ -749,6 +754,38 @@ function showNotification(message, type = 'info') {
 }
 
 /**
+ * Forcer le rafraîchissement du cache (pour synchroniser entre appareils)
+ */
+function forceRefreshCache() {
+    console.log('🔄 Forçage du rafraîchissement du cache...');
+    
+    // Afficher les données actuelles dans localStorage
+    console.log('💾 Données localStorage actuelles:');
+    console.log('- temp_municipal_data:', localStorage.getItem('temp_municipal_data') ? 'présent' : 'absent');
+    console.log('- validated_decontaminated:', localStorage.getItem('validated_decontaminated') || '[]');
+    console.log('- rejected_decontaminated:', localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    // Recalculer tout
+    compareAndCategorizeData();
+    updateStatistics();
+    
+    // Rafraîchir tous les affichages
+    displayDataInTable(municipalTable, municipalData);
+    displayGovernmentData(governmentTable, governmentData);
+    displayDataInTable(notInOfficialTable, notInOfficialData);
+    displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    displayPendingDecontaminatedData();
+    
+    // Recalculer les stats de décontamination
+    calculateDecontaminationStats();
+    
+    console.log('✅ Rafraîchissement terminé');
+    console.log(`📊 Résultat: ${decontaminatedData.length} validés, ${pendingDecontaminatedData.length} en attente`);
+    
+    showNotification(`Rafraîchissement terminé: ${pendingDecontaminatedData.length} terrains en attente de validation`, 'success');
+}
+
+/**
  * Afficher les terrains en attente de validation dans un tableau séparé
  */
 function displayPendingDecontaminatedData() {
@@ -942,7 +979,7 @@ function calculateDecontaminationStats() {
 }
 
 /**
- * Ajouter le logo et l'en-tête officiel au PDF
+ * Ajouter le logo et l'en-tête officiel au PDF (format paysage)
  */
 async function addPDFHeader(doc, title) {
     try {
@@ -952,8 +989,13 @@ async function addPDFHeader(doc, title) {
         
         await new Promise((resolve, reject) => {
             logoImg.onload = () => {
-                // Ajouter le logo en haut à gauche
-                doc.addImage(logoImg, 'PNG', 14, 10, 40, 20);
+                // Calculer les dimensions pour garder le ratio d'aspect
+                // Logo original est environ 300x150 (ratio 2:1)
+                const logoWidth = 50;
+                const logoHeight = 25;
+                
+                // Ajouter le logo en haut à gauche (non compressé)
+                doc.addImage(logoImg, 'PNG', 15, 12, logoWidth, logoHeight);
                 resolve();
             };
             logoImg.onerror = () => {
@@ -967,46 +1009,70 @@ async function addPDFHeader(doc, title) {
         console.warn('Erreur lors du chargement du logo:', error);
     }
     
-    // Ajouter le titre à droite du logo
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text(title, 60, 20);
+    // En-tête professionnel centré
+    const pageWidth = doc.internal.pageSize.width;
     
-    // Ville et date
+    // Titre principal
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text(title, pageWidth / 2, 20, { align: 'center' });
+    
+    // Sous-titre ville
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    doc.text('Ville de Val-d\'Or', pageWidth / 2, 28, { align: 'center' });
+    
+    // Date
     const date = new Date().toLocaleDateString('fr-CA');
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Ville de Val-d'Or`, 60, 27);
-    doc.text(`Date: ${date}`, 60, 32);
+    doc.setTextColor(100);
+    doc.text(`Date de génération: ${date}`, pageWidth / 2, 35, { align: 'center' });
     
-    return 40; // Retourner la position Y de départ pour le contenu
+    // Ligne de séparation
+    doc.setDrawColor(198, 54, 64); // Rouge Val-d'Or
+    doc.setLineWidth(0.5);
+    doc.line(15, 40, pageWidth - 15, 40);
+    
+    doc.setTextColor(0); // Réinitialiser la couleur
+    
+    return 45; // Retourner la position Y de départ pour le contenu
 }
 
 /**
- * Exporter un tableau en PDF avec logo officiel
+ * Exporter un tableau en PDF avec logo officiel (format Legal paysage)
  */
 async function exportTableToPDF(table, title) {
-    const doc = new jsPDF();
+    // Format Legal (8.5" x 14") en orientation paysage
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'legal' // 215.9mm x 355.6mm en paysage
+    });
     
     // Ajouter l'en-tête avec logo
     const startY = await addPDFHeader(doc, title);
     
-    // Ajouter le tableau
+    // Ajouter le tableau avec colonnes optimisées pour paysage
     doc.autoTable({
         html: table,
         startY: startY + 5,
+        margin: { left: 15, right: 15 },
         styles: {
-            fontSize: 7,
-            cellPadding: 2
+            fontSize: 8,
+            cellPadding: 3,
+            overflow: 'linebreak',
+            cellWidth: 'auto'
         },
         headStyles: {
             fillColor: [198, 54, 64], // Rouge de Val-d'Or
             textColor: 255,
-            fontStyle: 'bold'
+            fontStyle: 'bold',
+            fontSize: 9
         },
         alternateRowStyles: {
             fillColor: [245, 245, 245]
-        }
+        },
+        tableWidth: 'auto'
     });
     
     // Pied de page
@@ -1029,21 +1095,31 @@ async function exportTableToPDF(table, title) {
 }
 
 /**
- * Générer un rapport d'accès à l'information complet et professionnel
+ * Générer un rapport d'accès à l'information complet et professionnel (format Legal paysage)
  */
 async function generateAccessReport() {
-    const doc = new jsPDF();
-    const date = new Date().toLocaleDateString('fr-CA');
+    // Format Legal paysage pour tout le rapport
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'legal'
+    });
     
-    // Page 1: Page de garde
+    const date = new Date().toLocaleDateString('fr-CA');
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    // Page 1: Page de garde professionnelle
     try {
         const logoImg = new Image();
         logoImg.src = BASE_URL + 'assets/valdor-logo.png';
         
         await new Promise((resolve) => {
             logoImg.onload = () => {
-                // Logo centré en haut
-                doc.addImage(logoImg, 'PNG', 85, 30, 40, 20);
+                // Logo centré en haut (non compressé)
+                const logoWidth = 70;
+                const logoHeight = 35;
+                doc.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, 40, logoWidth, logoHeight);
                 resolve();
             };
             logoImg.onerror = resolve;
@@ -1054,37 +1130,46 @@ async function generateAccessReport() {
     }
     
     // Titre principal
-    doc.setFontSize(20);
+    doc.setFontSize(24);
     doc.setFont(undefined, 'bold');
-    doc.text("Rapport d'Accès à l'Information", doc.internal.pageSize.width / 2, 70, { align: 'center' });
+    doc.setTextColor(198, 54, 64); // Rouge Val-d'Or
+    doc.text("Rapport d'Accès à l'Information", pageWidth / 2, 90, { align: 'center' });
     
-    doc.setFontSize(16);
-    doc.text("Registre des Terrains Contaminés", doc.internal.pageSize.width / 2, 80, { align: 'center' });
+    doc.setTextColor(0);
+    doc.setFontSize(18);
+    doc.text("Registre des Terrains Contaminés", pageWidth / 2, 102, { align: 'center' });
     
     // Informations officielles
-    doc.setFontSize(12);
+    doc.setFontSize(14);
     doc.setFont(undefined, 'normal');
-    doc.text("Ville de Val-d'Or", doc.internal.pageSize.width / 2, 100, { align: 'center' });
-    doc.text(`Date de génération: ${date}`, doc.internal.pageSize.width / 2, 107, { align: 'center' });
+    doc.text("Ville de Val-d'Or", pageWidth / 2, 120, { align: 'center' });
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(`Date de génération: ${date}`, pageWidth / 2, 128, { align: 'center' });
     
-    // Résumé exécutif
+    // Résumé exécutif dans un cadre
+    doc.setTextColor(0);
+    doc.setDrawColor(198, 54, 64);
+    doc.setLineWidth(0.5);
+    doc.rect(40, 140, pageWidth - 80, 45);
+    
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text("Résumé Exécutif", 14, 130);
+    doc.text("Résumé Exécutif", pageWidth / 2, 150, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
     const stats = [
-        `Total de terrains au registre gouvernemental: ${governmentData.length}`,
+        `Terrains au registre gouvernemental: ${governmentData.length}`,
         `Terrains municipaux recensés: ${municipalData.length}`,
         `Terrains décontaminés validés: ${decontaminatedData.length}`,
         `Terrains en attente de validation: ${pendingDecontaminatedData.length}`,
         `Terrains non présents au registre officiel: ${notInOfficialData.length}`
     ];
     
-    let yPos = 140;
+    let yPos = 160;
     stats.forEach(stat => {
-        doc.text(`• ${stat}`, 20, yPos);
+        doc.text(`• ${stat}`, 50, yPos);
         yPos += 7;
     });
     
@@ -1093,51 +1178,51 @@ async function generateAccessReport() {
     doc.setTextColor(100);
     doc.text(
         "Ce rapport a été généré automatiquement à partir des données du registre gouvernemental",
-        doc.internal.pageSize.width / 2, 
-        280, 
+        pageWidth / 2, 
+        pageHeight - 20, 
         { align: 'center' }
     );
     doc.text(
         "et des registres municipaux de la Ville de Val-d'Or.",
-        doc.internal.pageSize.width / 2, 
-        285, 
+        pageWidth / 2, 
+        pageHeight - 15, 
         { align: 'center' }
     );
     
-    // Page 2: Tableau détaillé
+    // Page 2: Tableau détaillé avec en-tête professionnel
     doc.addPage();
     doc.setTextColor(0);
     
-    // En-tête de page
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text("Registre Détaillé des Terrains Contaminés", 14, 15);
+    // Ajouter l'en-tête avec logo sur cette page aussi
+    await addPDFHeader(doc, "Registre Détaillé des Terrains Contaminés");
     
-    // Tableau gouvernemental
+    // Tableau gouvernemental optimisé pour paysage
     doc.autoTable({
         html: governmentTable,
-        startY: 25,
+        startY: 50,
+        margin: { left: 15, right: 15 },
         styles: {
-            fontSize: 6,
-            cellPadding: 1.5
+            fontSize: 7,
+            cellPadding: 2,
+            overflow: 'linebreak'
         },
         headStyles: {
             fillColor: [198, 54, 64],
             textColor: 255,
             fontStyle: 'bold',
-            fontSize: 7
+            fontSize: 8
         },
         alternateRowStyles: {
             fillColor: [245, 245, 245]
         },
         columnStyles: {
-            0: { cellWidth: 20 }, // Référence
-            1: { cellWidth: 45 }, // Adresse
-            2: { cellWidth: 18 }, // Code postal
-            3: { cellWidth: 30 }, // État réhab
-            4: { cellWidth: 15 }, // Qual avant
-            5: { cellWidth: 15 }, // Qual après
-            6: { cellWidth: 40 }, // Contaminants
+            0: { cellWidth: 25 }, // Référence
+            1: { cellWidth: 60 }, // Adresse
+            2: { cellWidth: 20 }, // Code postal
+            3: { cellWidth: 40 }, // État réhab
+            4: { cellWidth: 20 }, // Qual avant
+            5: { cellWidth: 20 }, // Qual après
+            6: { cellWidth: 60 }, // Contaminants
             7: { cellWidth: 25 }, // Milieu
             8: { cellWidth: 18 }  // Consultation
         },
@@ -1232,6 +1317,12 @@ async function initializeApp() {
         // Ajouter l'écouteur pour le bouton de synchronisation
         if (syncGovernmentBtn) {
             syncGovernmentBtn.addEventListener('click', synchronizeGovernmentData);
+        }
+        
+        // Ajouter l'écouteur pour le bouton de rafraîchissement forcé
+        const forceRefreshBtn = document.getElementById('force-refresh-decontaminated');
+        if (forceRefreshBtn) {
+            forceRefreshBtn.addEventListener('click', forceRefreshCache);
         }
         
         console.log('✅ Application initialisée avec succès !');

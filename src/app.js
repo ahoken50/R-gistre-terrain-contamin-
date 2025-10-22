@@ -1508,8 +1508,22 @@ async function generateAccessReport() {
             fillColor: [245, 245, 245]
         },
         tableWidth: 'auto',
+        // Ajouter des bordures simples
+        tableLineColor: [200, 200, 200],
+        tableLineWidth: 0.1,
         // Supprimer columnStyles fixes - laisser autoTable optimiser
         didParseCell: function(data) {
+            // Nettoyer la colonne État Réhabilitation (colonne 3)
+            if (data.column.index === 3 && data.cell.raw) {
+                let cleanText = String(data.cell.raw)
+                    .replace(/[ØÝø=]/g, '')  // Caractères spéciaux typiques
+                    .replace(/['']/g, "'")    // Normaliser apostrophes
+                    .replace(/[^a-zA-Z0-9À-ÿ\s'\-()]/g, '')  // Garder seulement lettres, chiffres, accents, espaces, apostrophes normales, tirets et parenthèses
+                    .replace(/\s+/g, ' ')     // Enlever espaces multiples
+                    .trim();
+                data.cell.text = [cleanText];
+            }
+            
             // Forcer plus de hauteur pour les colonnes avec beaucoup de texte
             if (data.cell.raw && String(data.cell.raw).length > 50) {
                 data.cell.styles.minCellHeight = 12;
@@ -1518,6 +1532,10 @@ async function generateAccessReport() {
             if (data.column.index === 6 && data.cell.raw) {
                 data.cell.styles.minCellHeight = 15;
             }
+            
+            // Ajouter des bordures à toutes les cellules
+            data.cell.styles.lineColor = [200, 200, 200];
+            data.cell.styles.lineWidth = 0.1;
         }
     });
     

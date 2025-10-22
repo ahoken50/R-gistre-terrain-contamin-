@@ -178,6 +178,17 @@ async function loadGovernmentData() {
 function compareAndCategorizeData() {
     console.log('🔍 Comparaison et catégorisation des données...');
     
+    // DEBUG: Voir les colonnes des données gouvernementales
+    if (governmentData.length > 0) {
+        console.log('📋 Colonnes données gouvernementales:', Object.keys(governmentData[0]));
+        const firstItem = governmentData[0];
+        console.log('📋 Premier terrain gouv - échantillon:', {
+            adresse: firstItem.ADRESSE || firstItem.adresse || firstItem.address,
+            reference: firstItem.NO_MEF_LIEU || firstItem.reference,
+            etat: firstItem.ETAT_REHAB
+        });
+    }
+    
     // Créer un Set des adresses officielles (gouvernementales) normalisées
     const officialAddresses = new Set(
         governmentData.map(item => {
@@ -186,7 +197,16 @@ function compareAndCategorizeData() {
         }).filter(addr => addr !== '')
     );
     
+    // Créer aussi un Set des références pour identifyDecontaminatedLands()
+    const officialReferences = new Set(
+        governmentData.map(item => {
+            const ref = item.NO_MEF_LIEU || item.reference || item.Reference || item.ID;
+            return (ref || '').toString().trim().toLowerCase();
+        }).filter(ref => ref !== '')
+    );
+    
     console.log(`📋 Total adresses gouvernementales: ${officialAddresses.size}`);
+    console.log(`📋 Total références gouvernementales: ${officialReferences.size}`);
     console.log('📋 Échantillon adresses gouvernementales normalisées:', 
         Array.from(officialAddresses).slice(0, 5));
     

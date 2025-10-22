@@ -199,7 +199,11 @@ function compareAndCategorizeData() {
     
     // Extraire toutes les adresses gouvernementales (avec tous noms de colonnes possibles)
     const officialAddresses = governmentData.map(item => {
-        // Chercher la colonne qui contient "adresse" dans son nom
+        // Priorité 1: ADR_CIV_LIEU (colonne standard du registre gouvernemental)
+        if (item.ADR_CIV_LIEU) {
+            return item.ADR_CIV_LIEU;
+        }
+        // Priorité 2: Chercher la colonne qui contient "adresse" dans son nom
         for (const key of Object.keys(item)) {
             if (key.toLowerCase().includes('adresse') || key.toLowerCase().includes('address')) {
                 return item[key] || '';
@@ -664,7 +668,19 @@ function displayGovernmentData(table, data) {
         
         // Colonne 4: État de réhabilitation avec badge
         const etatCell = document.createElement('td');
-        const etatRehab = item.ETAT_REHAB || '';
+        let etatRehab = item.ETAT_REHAB || '';
+        
+        // Nettoyer les caractères spéciaux et garder seulement texte/années
+        if (etatRehab) {
+            // Enlever les caractères spéciaux comme Ø=Ý, apostrophes étranges, etc.
+            etatRehab = etatRehab
+                .replace(/[ØÝø=]/g, '')  // Caractères spéciaux typiques
+                .replace(/['']/g, "'")    // Normaliser apostrophes
+                .replace(/[^a-zA-Z0-9À-ÿ\s'\-()]/g, '')  // Garder seulement lettres, chiffres, accents, espaces, apostrophes normales, tirets et parenthèses
+                .replace(/\s+/g, ' ')     // Enlever espaces multiples
+                .trim();
+        }
+        
         if (etatRehab) {
             // Créer un badge selon l'état
             if (etatRehab.includes('Terminée')) {
@@ -1273,10 +1289,10 @@ async function addPDFHeader(doc, title) {
         
         await new Promise((resolve, reject) => {
             logoImg.onload = () => {
-                // Calculer les dimensions pour garder le ratio d'aspect
-                // Logo original est environ 300x150 (ratio 2:1)
-                const logoWidth = 50;
+                // Calculer les dimensions avec ratio correct (580x798 = portrait)
+                // Utiliser même ratio que page couverture
                 const logoHeight = 25;
+                const logoWidth = logoHeight * (580 / 798);  // Préserver ratio réel
                 
                 // Ajouter le logo en haut à gauche (non compressé)
                 doc.addImage(logoImg, 'PNG', 15, 12, logoWidth, logoHeight);
@@ -1403,9 +1419,10 @@ async function generateAccessReport() {
         
         await new Promise((resolve) => {
             logoImg.onload = () => {
-                // Logo centré en haut (non compressé)
-                const logoWidth = 70;
+                // Logo centré en haut - calculer ratio correct
+                // Image réelle: 580x798 (ratio 0.727 = portrait)
                 const logoHeight = 35;
+                const logoWidth = logoHeight * (580 / 798);  // Préserver ratio réel
                 doc.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, 40, logoWidth, logoHeight);
                 resolve();
             };
@@ -1441,32 +1458,6 @@ async function generateAccessReport() {
     doc.setTextColor(100);
     doc.text(`Date de mise à jour: ${date}`, pageWidth / 2, 142, { align: 'center' });
     
-    // Résumé exécutif dans un cadre
-    doc.setTextColor(0);
-    doc.setDrawColor(198, 54, 64);
-    doc.setLineWidth(0.5);
-    doc.rect(40, 155, pageWidth - 80, 45);
-    
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text("Résumé Exécutif", pageWidth / 2, 165, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    const stats = [
-        `Terrains au registre gouvernemental: ${governmentData.length}`,
-        `Terrains municipaux recensés: ${municipalData.length}`,
-        `Terrains décontaminés validés: ${decontaminatedData.length}`,
-        `Terrains en attente de validation: ${pendingDecontaminatedData.length}`,
-        `Terrains non présents au registre officiel: ${notInOfficialData.length}`
-    ];
-    
-    let yPos = 175;
-    stats.forEach(stat => {
-        doc.text(`• ${stat}`, 50, yPos);
-        yPos += 7;
-    });
-    
     // Note légale
     doc.setFontSize(8);
     doc.setTextColor(100);
@@ -1498,20 +1489,20 @@ async function generateAccessReport() {
         startY: 50,
         margin: { left: 15, right: 15 },
         styles: {
-            fontSize: 6,
-            cellPadding: 1.5,
+            fontSize: 8,  // Augmenté de 6 à 8 pour meilleure lisibilité
+            cellPadding: 2,  // Augmenté de 1.5 à 2
             overflow: 'linebreak',
             halign: 'left',
             valign: 'top',
-            minCellHeight: 8  // Hauteur minimum pour permettre retours ligne
+            minCellHeight: 9  // Augmenté de 8 à 9
         },
         headStyles: {
             fillColor: [198, 54, 64],
             textColor: 255,
             fontStyle: 'bold',
-            fontSize: 7,
+            fontSize: 9,  // Augmenté de 7 à 9
             halign: 'center',
-            minCellHeight: 7
+            minCellHeight: 8  // Augmenté de 7 à 8
         },
         alternateRowStyles: {
             fillColor: [245, 245, 245]

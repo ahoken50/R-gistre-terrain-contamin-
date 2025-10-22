@@ -11,6 +11,7 @@ let governmentData = [];
 let notInOfficialData = [];
 let decontaminatedData = [];
 let pendingDecontaminatedData = []; // Terrains en attente de validation
+let validationsData = { validated: [], rejected: [], lastUpdate: null }; // Validations permanentes
 
 // Références aux éléments DOM
 const municipalTable = document.getElementById('municipal-table');
@@ -390,12 +391,12 @@ function identifyDecontaminatedLands(officialReferences) {
         });
     }
     
-    // Récupérer les terrains déjà validés depuis localStorage
-    const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
-    const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    // Récupérer les terrains déjà validés depuis validationsData (chargé du fichier JSON)
+    const validatedIds = validationsData.validated || [];
+    const rejectedIds = validationsData.rejected || [];
     
-    console.log('💾 localStorage validés:', validatedIds.length);
-    console.log('💾 localStorage rejetés:', rejectedIds.length);
+    console.log('💾 Validations chargées - validés:', validatedIds.length);
+    console.log('💾 Validations chargées - rejetés:', rejectedIds.length);
     
     // Réinitialiser les listes
     decontaminatedData = [];
@@ -934,9 +935,9 @@ function formatDate(dateString) {
 window.validateDecontamination = function(itemId) {
     console.log(`✅ Validation du terrain: ${itemId}`);
     
-    // Récupérer les listes
-    const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
-    const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    // Récupérer les listes depuis validationsData
+    const validatedIds = validationsData.validated || [];
+    const rejectedIds = validationsData.rejected || [];
     
     // Ajouter à la liste validée
     if (!validatedIds.includes(itemId)) {
@@ -949,9 +950,17 @@ window.validateDecontamination = function(itemId) {
         rejectedIds.splice(rejectedIndex, 1);
     }
     
-    // Sauvegarder
+    // Sauvegarder dans validationsData
+    validationsData.validated = validatedIds;
+    validationsData.rejected = rejectedIds;
+    validationsData.lastUpdate = new Date().toISOString();
+    
+    // Sauvegarder aussi dans localStorage comme backup
     localStorage.setItem('validated_decontaminated', JSON.stringify(validatedIds));
     localStorage.setItem('rejected_decontaminated', JSON.stringify(rejectedIds));
+    
+    // Afficher un rappel pour exporter
+    showValidationReminder();
     
     // Rafraîchir l'affichage
     compareAndCategorizeData();
@@ -974,9 +983,9 @@ window.validateDecontamination = function(itemId) {
 window.rejectDecontamination = function(itemId) {
     console.log(`❌ Rejet du terrain: ${itemId}`);
     
-    // Récupérer les listes
-    const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
-    const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    // Récupérer les listes depuis validationsData
+    const validatedIds = validationsData.validated || [];
+    const rejectedIds = validationsData.rejected || [];
     
     // Ajouter à la liste rejetée
     if (!rejectedIds.includes(itemId)) {
@@ -1569,6 +1578,87 @@ async function generateAccessReport() {
 }
 
 /**
+ * Charger les validations depuis le fichier JSON
+ */
+async function loadValidations() {
+    try {
+        const response = await fetch(BASE_URL + 'data/decontaminated-validations.json');
+        if (response.ok) {
+            validationsData = await response.json();
+            console.log('✅ Validations chargées:', validationsData.validated.length, 'validés,', validationsData.rejected.length, 'rejetés');
+        } else {
+            console.warn('⚠️ Fichier de validations non trouvé, utilisation des données vides');
+        }
+    } catch (error) {
+        console.warn('⚠️ Erreur lors du chargement des validations:', error);
+    }
+    
+    // Merger avec localStorage si présent (compatibilité)
+    const localValidated = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
+    const localRejected = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    if (localValidated.length > 0 || localRejected.length > 0) {
+        console.log('🔄 Fusion avec localStorage:', localValidated.length, 'validés,', localRejected.length, 'rejetés');
+        // Merger sans doublons
+        validationsData.validated = [...new Set([...validationsData.validated, ...localValidated])];
+        validationsData.rejected = [...new Set([...validationsData.rejected, ...localRejected])];
+    }
+}
+
+/**
+ * Exporter les validations en JSON pour sauvegarde permanente
+ */
+window.exportValidations = function() {
+    const dataStr = JSON.stringify(validationsData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'decontaminated-validations.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification('✅ Fichier de validations téléchargé ! Placez-le dans public/data/ pour le partager avec vos collègues.', 'success');
+}
+
+/**
+ * Afficher un rappel pour exporter les validations
+ */
+function showValidationReminder() {
+    // Vérifier si on doit afficher le rappel (pas plus d'une fois par minute)
+    const lastReminder = localStorage.getItem('last_validation_reminder');
+    const now = Date.now();
+    
+    if (!lastReminder || (now - parseInt(lastReminder)) > 60000) {
+        localStorage.setItem('last_validation_reminder', now.toString());
+        
+        // Créer une notification avec bouton d'export
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; max-width: 400px;';
+        notification.innerHTML = `
+            <strong>💾 Validations modifiées</strong><br>
+            N'oubliez pas d'exporter vos validations pour les partager avec vos collègues !
+            <button type="button" class="btn btn-sm btn-primary mt-2" onclick="exportValidations()">
+                📥 Exporter maintenant
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(notification);
+        
+        // Auto-supprimer après 10 secondes
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 10000);
+    }
+}
+
+/**
  * Initialiser l'application
  */
 async function initializeApp() {
@@ -1579,6 +1669,7 @@ async function initializeApp() {
     
     try {
         // Charger les données
+        await loadValidations();  // Charger d'abord les validations
         await loadMunicipalData();
         await loadGovernmentData();
         

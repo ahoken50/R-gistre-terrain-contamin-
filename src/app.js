@@ -1403,9 +1403,10 @@ async function generateAccessReport() {
         
         await new Promise((resolve) => {
             logoImg.onload = () => {
-                // Logo centré en haut (non compressé)
-                const logoWidth = 70;
+                // Logo centré en haut - calculer ratio correct
+                // Image réelle: 580x798 (ratio 0.727 = portrait)
                 const logoHeight = 35;
+                const logoWidth = logoHeight * (580 / 798);  // Préserver ratio réel
                 doc.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, 40, logoWidth, logoHeight);
                 resolve();
             };

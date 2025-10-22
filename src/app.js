@@ -178,6 +178,12 @@ async function loadGovernmentData() {
 function compareAndCategorizeData() {
     console.log('🔍 Comparaison et catégorisation des données...');
     
+    // DEBUG: Afficher les noms de colonnes des données gouvernementales
+    if (governmentData.length > 0) {
+        console.log('📋 Colonnes données gouvernementales:', Object.keys(governmentData[0]));
+        console.log('📋 Premier terrain gouvernemental:', governmentData[0]);
+    }
+    
     // Créer un Set des références officielles pour recherche rapide
     const officialReferences = new Set(
         governmentData.map(item => {
@@ -187,8 +193,9 @@ function compareAndCategorizeData() {
     );
     
     // DEBUG: Afficher échantillon des références gouvernementales
-    const govRefsArray = Array.from(officialReferences).slice(0, 5);
-    console.log('📋 Échantillon références gouvernementales:', govRefsArray);
+    const govRefsArray = Array.from(officialReferences).slice(0, 10);
+    console.log('📋 Références gouvernementales (10 premières):', govRefsArray);
+    console.log('📋 Total références gouvernementales:', officialReferences.size);
     
     // Identifier les terrains non présents dans le registre officiel
     let countWithReference = 0;
@@ -1404,17 +1411,17 @@ async function generateAccessReport() {
         alternateRowStyles: {
             fillColor: [245, 245, 245]
         },
-        tableWidth: 'wrap',
+        tableWidth: 'auto',
         columnStyles: {
-            0: { cellWidth: 28 },  // Référence
-            1: { cellWidth: 50 },  // Adresse
-            2: { cellWidth: 18 },  // Code postal
-            3: { cellWidth: 32 },  // État réhabilitation
-            4: { cellWidth: 22 },  // Qualité avant
-            5: { cellWidth: 22 },  // Qualité après
-            6: { cellWidth: 60, overflow: 'linebreak', cellPadding: 2 },  // Contaminants (avec retours de ligne)
-            7: { cellWidth: 28 },  // Milieu récepteur
-            8: { cellWidth: 18 }   // Consultation
+            0: { cellWidth: 25 },  // Référence
+            1: { cellWidth: 45 },  // Adresse
+            2: { cellWidth: 15 },  // Code postal
+            3: { cellWidth: 30 },  // État réhabilitation
+            4: { cellWidth: 20 },  // Qualité avant
+            5: { cellWidth: 20 },  // Qualité après
+            6: { cellWidth: 80, overflow: 'linebreak' },  // Contaminants (avec retours de ligne - PLUS LARGE)
+            7: { cellWidth: 25 },  // Milieu récepteur
+            8: { cellWidth: 15 }   // Consultation
         }
     });
     

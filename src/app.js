@@ -204,6 +204,20 @@ function compareAndCategorizeData() {
 }
 
 /**
+ * Helper: Récupérer la valeur d'une colonne en essayant différents noms possibles
+ * Retourne la première valeur non vide trouvée parmi les noms de colonnes possibles
+ */
+function getColumnValue(item, ...possibleNames) {
+    for (const name of possibleNames) {
+        const value = item[name];
+        if (value !== undefined && value !== null && value !== '') {
+            return value;
+        }
+    }
+    return null;
+}
+
+/**
  * Identifier automatiquement les terrains décontaminés
  * Utilise les données officielles du registre gouvernemental (ETAT_REHAB, IS_DECONTAMINATED)
  * et corrèle avec les commentaires municipaux
@@ -212,6 +226,13 @@ function identifyDecontaminatedLands(officialReferences) {
     console.log('🔍 Détection automatique des terrains décontaminés...');
     console.log('📊 Données municipales disponibles:', municipalData.length);
     console.log('📊 Données gouvernementales disponibles:', governmentData.length);
+    
+    // DIAGNOSTIC: Afficher les noms de colonnes présents dans les données
+    if (municipalData.length > 0) {
+        const sampleItem = municipalData[0];
+        const columnNames = Object.keys(sampleItem);
+        console.log('📋 Noms de colonnes détectés dans les données municipales:', columnNames);
+    }
     
     // Récupérer les terrains déjà validés depuis localStorage
     const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
@@ -247,27 +268,51 @@ function identifyDecontaminatedLands(officialReferences) {
             return;
         }
         
+        // Utiliser le helper pour récupérer les valeurs avec noms de colonnes flexibles
+        const avisDecontamination = getColumnValue(
+            item, 
+            'avis_decontamination',      // Format attendu originel
+            'avis_de_decontamination',   // Format normalisé par upload.js
+            'date_avis',
+            'avis_decontamination_date'
+        );
+        
+        const commentaires = getColumnValue(
+            item,
+            'commentaires',              // Format attendu originel
+            'commentaire',
+            'comments'
+        );
+        
+        const reference = getColumnValue(
+            item,
+            'reference',                 // Format attendu originel
+            'reference_menviq',          // Format normalisé par upload.js
+            'no_mef_lieu',
+            'numero_menviq'
+        );
+        
         // Critère 1 : A une date d'avis de décontamination
-        const hasDecontaminationNotice = item.avis_decontamination && 
-                                        item.avis_decontamination.trim() !== '';
+        const hasDecontaminationNotice = avisDecontamination && 
+                                        avisDecontamination.trim() !== '';
         if (hasDecontaminationNotice) countWithNotice++;
         
         // Critère 2 : Commentaire mentionne "décontaminé" ou "recu avis"
-        const hasDecontaminationComment = item.commentaires && 
-                                         (item.commentaires.toLowerCase().includes('décontaminé') ||
-                                          item.commentaires.toLowerCase().includes('recu avis') ||
-                                          item.commentaires.toLowerCase().includes('reçu avis'));
+        const hasDecontaminationComment = commentaires && 
+                                         (commentaires.toLowerCase().includes('décontaminé') ||
+                                          commentaires.toLowerCase().includes('recu avis') ||
+                                          commentaires.toLowerCase().includes('reçu avis'));
         if (hasDecontaminationComment) countWithComment++;
         
         // Critère 3 : Référence dans le registre gouvernemental avec état "Terminée"
-        const hadReference = item.reference && item.reference.trim() !== '';
+        const hadReference = reference && reference.trim() !== '';
         if (hadReference) countWithReference++;
-        const govTerrain = hadReference ? govTerrainMap.get(item.reference.toLowerCase()) : null;
+        const govTerrain = hadReference ? govTerrainMap.get(reference.toLowerCase()) : null;
         const isDecontaminatedInGov = govTerrain && govTerrain.IS_DECONTAMINATED === true;
         if (isDecontaminatedInGov) countIsDecontaminatedInGov++;
         
         // Critère 4 : Avait une référence mais n'est plus dans le registre gouvernemental
-        const notInGovernmentRegistry = hadReference && !officialReferences.has(item.reference.toLowerCase());
+        const notInGovernmentRegistry = hadReference && !officialReferences.has(reference.toLowerCase());
         
         // Déterminer si le terrain est potentiellement décontaminé
         let isDecontaminated = false;

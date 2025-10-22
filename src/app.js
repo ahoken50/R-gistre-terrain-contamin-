@@ -210,10 +210,15 @@ function compareAndCategorizeData() {
  */
 function identifyDecontaminatedLands(officialReferences) {
     console.log('🔍 Détection automatique des terrains décontaminés...');
+    console.log('📊 Données municipales disponibles:', municipalData.length);
+    console.log('📊 Données gouvernementales disponibles:', governmentData.length);
     
     // Récupérer les terrains déjà validés depuis localStorage
     const validatedIds = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
     const rejectedIds = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    console.log('💾 localStorage validés:', validatedIds.length);
+    console.log('💾 localStorage rejetés:', rejectedIds.length);
     
     // Réinitialiser les listes
     decontaminatedData = [];
@@ -399,7 +404,7 @@ function displayGovernmentData(table, data) {
     if (data.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 7; // Augmenté pour les nouvelles colonnes
+        cell.colSpan = 9; // Augmenté pour les nouvelles colonnes (Qualité avant/après)
         cell.className = 'text-center text-muted';
         cell.textContent = 'Aucune donnée disponible';
         row.appendChild(cell);
@@ -450,7 +455,29 @@ function displayGovernmentData(table, data) {
         }
         row.appendChild(etatCell);
         
-        // Colonne 5: Contaminants (Sol)
+        // Colonne 5: Qualité des sols AVANT décontamination
+        const qualAvantCell = document.createElement('td');
+        const qualAv = item.QUAL_SOLS_AV || '';
+        if (qualAv) {
+            const badge = createQualityBadge(qualAv);
+            qualAvantCell.innerHTML = badge;
+        } else {
+            qualAvantCell.innerHTML = '<span class="qual-badge qual-empty">-</span>';
+        }
+        row.appendChild(qualAvantCell);
+        
+        // Colonne 6: Qualité des sols APRÈS décontamination (critère atteint)
+        const qualApresCell = document.createElement('td');
+        const qualAp = item.QUAL_SOLS || '';
+        if (qualAp) {
+            const badge = createQualityBadge(qualAp);
+            qualApresCell.innerHTML = badge;
+        } else {
+            qualApresCell.innerHTML = '<span class="qual-badge qual-empty">-</span>';
+        }
+        row.appendChild(qualApresCell);
+        
+        // Colonne 7: Contaminants (Sol)
         const contamCell = document.createElement('td');
         const contaminants = item.CONTAM_SOL_EXTRA || '';
         if (contaminants) {
@@ -483,41 +510,59 @@ function displayGovernmentData(table, data) {
         }
         row.appendChild(contamCell);
         
-        // Colonne 6: Milieu récepteur
+        // Colonne 8: Milieu récepteur
         const milieuCell = document.createElement('td');
         milieuCell.textContent = item.DESC_MILIEU_RECEPT || item.milieu_recepteur || '';
         row.appendChild(milieuCell);
         
-        // Colonne 7: Fiches cliquables
-        const fichesCell = document.createElement('td');
-        const nbFiches = item.NB_FICHES || item.nb_fiches || 0;
-        const fichesUrls = item.FICHES_URLS || [];
-        
-        if (fichesUrls && fichesUrls.length > 0) {
-            fichesUrls.forEach((url, index) => {
-                const link = document.createElement('a');
-                link.href = url;
-                link.target = '_blank';
-                link.className = 'fiche-link';
-                link.textContent = `Fiche ${index + 1}`;
-                link.title = `Consulter la fiche #${index + 1}`;
-                fichesCell.appendChild(link);
-                
-                if (index < fichesUrls.length - 1) {
-                    fichesCell.appendChild(document.createTextNode(' '));
-                }
-            });
-        } else if (nbFiches > 0) {
-            fichesCell.textContent = `${formatNumber(nbFiches)} fiche(s)`;
-            fichesCell.style.color = '#999';
+        // Colonne 9: Lien vers Repère GTC pour consultation
+        const consultCell = document.createElement('td');
+        const mefLieu = item.NO_MEF_LIEU || '';
+        if (mefLieu) {
+            const link = document.createElement('a');
+            link.href = `https://www.pes1.enviroweb.gouv.qc.ca/AtlasPublic/CartesPubliques/cartesmddelcc.html?cfg=TerrainsContamines.json`;
+            link.target = '_blank';
+            link.className = 'fiche-link';
+            link.textContent = '🗺️ Atlas';
+            link.title = `Consulter sur Repère GTC (rechercher: ${mefLieu})`;
+            consultCell.appendChild(link);
         } else {
-            fichesCell.textContent = 'Aucune';
-            fichesCell.style.color = '#999';
+            consultCell.textContent = '-';
+            consultCell.style.color = '#999';
         }
-        row.appendChild(fichesCell);
+        row.appendChild(consultCell);
         
         tbody.appendChild(row);
     });
+}
+
+/**
+ * Créer un badge de qualité des sols
+ */
+function createQualityBadge(quality) {
+    if (!quality || quality === '') {
+        return '<span class="qual-badge qual-empty">-</span>';
+    }
+    
+    const qualStr = quality.toString().trim();
+    let badgeClass = 'qual-empty';
+    let badgeText = qualStr;
+    
+    if (qualStr.includes('Plage A')) {
+        badgeClass = 'qual-a';
+        badgeText = 'A';
+    } else if (qualStr.includes('Plage B-C') || qualStr.includes('Plage BC')) {
+        badgeClass = 'qual-bc';
+        badgeText = 'B-C';
+    } else if (qualStr.includes('Plage B')) {
+        badgeClass = 'qual-b';
+        badgeText = 'B';
+    } else if (qualStr.includes('Plage C')) {
+        badgeClass = 'qual-c';
+        badgeText = 'C';
+    }
+    
+    return `<span class="qual-badge ${badgeClass}" title="${qualStr}">${badgeText}</span>`;
 }
 
 /**
@@ -706,6 +751,38 @@ function showNotification(message, type = 'info') {
             notification.remove();
         }
     }, 3000);
+}
+
+/**
+ * Forcer le rafraîchissement du cache (pour synchroniser entre appareils)
+ */
+function forceRefreshCache() {
+    console.log('🔄 Forçage du rafraîchissement du cache...');
+    
+    // Afficher les données actuelles dans localStorage
+    console.log('💾 Données localStorage actuelles:');
+    console.log('- temp_municipal_data:', localStorage.getItem('temp_municipal_data') ? 'présent' : 'absent');
+    console.log('- validated_decontaminated:', localStorage.getItem('validated_decontaminated') || '[]');
+    console.log('- rejected_decontaminated:', localStorage.getItem('rejected_decontaminated') || '[]');
+    
+    // Recalculer tout
+    compareAndCategorizeData();
+    updateStatistics();
+    
+    // Rafraîchir tous les affichages
+    displayDataInTable(municipalTable, municipalData);
+    displayGovernmentData(governmentTable, governmentData);
+    displayDataInTable(notInOfficialTable, notInOfficialData);
+    displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    displayPendingDecontaminatedData();
+    
+    // Recalculer les stats de décontamination
+    calculateDecontaminationStats();
+    
+    console.log('✅ Rafraîchissement terminé');
+    console.log(`📊 Résultat: ${decontaminatedData.length} validés, ${pendingDecontaminatedData.length} en attente`);
+    
+    showNotification(`Rafraîchissement terminé: ${pendingDecontaminatedData.length} terrains en attente de validation`, 'success');
 }
 
 /**
@@ -902,72 +979,272 @@ function calculateDecontaminationStats() {
 }
 
 /**
- * Exporter un tableau en PDF
+ * Ajouter le logo et l'en-tête officiel au PDF (format paysage)
  */
-function exportTableToPDF(table, title) {
-    const doc = new jsPDF();
+async function addPDFHeader(doc, title) {
+    try {
+        // Charger le logo
+        const logoImg = new Image();
+        logoImg.src = BASE_URL + 'assets/valdor-logo.png';
+        
+        await new Promise((resolve, reject) => {
+            logoImg.onload = () => {
+                // Calculer les dimensions pour garder le ratio d'aspect
+                // Logo original est environ 300x150 (ratio 2:1)
+                const logoWidth = 50;
+                const logoHeight = 25;
+                
+                // Ajouter le logo en haut à gauche (non compressé)
+                doc.addImage(logoImg, 'PNG', 15, 12, logoWidth, logoHeight);
+                resolve();
+            };
+            logoImg.onerror = () => {
+                console.warn('Logo non chargé, continuation sans logo');
+                resolve();
+            };
+            // Timeout de 2 secondes
+            setTimeout(resolve, 2000);
+        });
+    } catch (error) {
+        console.warn('Erreur lors du chargement du logo:', error);
+    }
     
-    // Ajouter le titre
+    // En-tête professionnel centré
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Titre principal
     doc.setFontSize(18);
-    doc.text(title, 14, 22);
+    doc.setFont(undefined, 'bold');
+    doc.text(title, pageWidth / 2, 20, { align: 'center' });
     
-    // Ajouter la date
-    const date = new Date().toLocaleDateString('fr-CA');
+    // Sous-titre ville
     doc.setFontSize(12);
-    doc.text(`Date d'export: ${date}`, 14, 30);
+    doc.setFont(undefined, 'normal');
+    doc.text('Ville de Val-d\'Or', pageWidth / 2, 28, { align: 'center' });
     
-    // Ajouter le tableau
-    doc.autoTable({
-        html: table,
-        startY: 35,
-        styles: {
-            fontSize: 8
-        },
-        headStyles: {
-            fillColor: [13, 110, 253]
-        }
+    // Date
+    const date = new Date().toLocaleDateString('fr-CA');
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Date de génération: ${date}`, pageWidth / 2, 35, { align: 'center' });
+    
+    // Ligne de séparation
+    doc.setDrawColor(198, 54, 64); // Rouge Val-d'Or
+    doc.setLineWidth(0.5);
+    doc.line(15, 40, pageWidth - 15, 40);
+    
+    doc.setTextColor(0); // Réinitialiser la couleur
+    
+    return 45; // Retourner la position Y de départ pour le contenu
+}
+
+/**
+ * Exporter un tableau en PDF avec logo officiel (format Legal paysage)
+ */
+async function exportTableToPDF(table, title) {
+    // Format Legal (8.5" x 14") en orientation paysage
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'legal' // 215.9mm x 355.6mm en paysage
     });
     
+    // Ajouter l'en-tête avec logo
+    const startY = await addPDFHeader(doc, title);
+    
+    // Ajouter le tableau avec colonnes optimisées pour paysage
+    doc.autoTable({
+        html: table,
+        startY: startY + 5,
+        margin: { left: 15, right: 15 },
+        styles: {
+            fontSize: 8,
+            cellPadding: 3,
+            overflow: 'linebreak',
+            cellWidth: 'auto'
+        },
+        headStyles: {
+            fillColor: [198, 54, 64], // Rouge de Val-d'Or
+            textColor: 255,
+            fontStyle: 'bold',
+            fontSize: 9
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245]
+        },
+        tableWidth: 'auto'
+    });
+    
+    // Pied de page
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(
+            `Page ${i} sur ${pageCount}`,
+            doc.internal.pageSize.width / 2,
+            doc.internal.pageSize.height - 10,
+            { align: 'center' }
+        );
+    }
+    
     // Sauvegarder le PDF
+    const date = new Date().toLocaleDateString('fr-CA');
     doc.save(`${title.replace(/\s+/g, '_')}_${date}.pdf`);
 }
 
 /**
- * Générer un rapport d'accès à l'information
+ * Générer un rapport d'accès à l'information complet et professionnel (format Legal paysage)
  */
-function generateAccessReport() {
-    const doc = new jsPDF();
-    
-    // Ajouter le titre
-    doc.setFontSize(18);
-    doc.text("Rapport d'Accès à l'Information - Terrains Contaminés", 14, 22);
-    
-    // Ajouter la date
-    const date = new Date().toLocaleDateString('fr-CA');
-    doc.setFontSize(12);
-    doc.text(`Date de génération: ${date}`, 14, 30);
-    doc.text(`Ville de Val-d'Or`, 14, 37);
-    
-    // Statistiques
-    doc.setFontSize(10);
-    doc.text(`Total de terrains contaminés: ${governmentData.length}`, 14, 45);
-    doc.text(`Terrains municipaux recensés: ${municipalData.length}`, 14, 52);
-    doc.text(`Terrains non présents au registre officiel: ${notInOfficialData.length}`, 14, 59);
-    
-    // Ajouter le tableau gouvernemental
-    doc.autoTable({
-        html: governmentTable,
-        startY: 67,
-        styles: {
-            fontSize: 7
-        },
-        headStyles: {
-            fillColor: [13, 110, 253]
-        }
+async function generateAccessReport() {
+    // Format Legal paysage pour tout le rapport
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'legal'
     });
     
+    const date = new Date().toLocaleDateString('fr-CA');
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    // Page 1: Page de garde professionnelle
+    try {
+        const logoImg = new Image();
+        logoImg.src = BASE_URL + 'assets/valdor-logo.png';
+        
+        await new Promise((resolve) => {
+            logoImg.onload = () => {
+                // Logo centré en haut (non compressé)
+                const logoWidth = 70;
+                const logoHeight = 35;
+                doc.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, 40, logoWidth, logoHeight);
+                resolve();
+            };
+            logoImg.onerror = resolve;
+            setTimeout(resolve, 2000);
+        });
+    } catch (error) {
+        console.warn('Logo non chargé');
+    }
+    
+    // Titre principal
+    doc.setFontSize(24);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(198, 54, 64); // Rouge Val-d'Or
+    doc.text("Rapport d'Accès à l'Information", pageWidth / 2, 90, { align: 'center' });
+    
+    doc.setTextColor(0);
+    doc.setFontSize(18);
+    doc.text("Registre des Terrains Contaminés", pageWidth / 2, 102, { align: 'center' });
+    
+    // Informations officielles
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'normal');
+    doc.text("Ville de Val-d'Or", pageWidth / 2, 120, { align: 'center' });
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(`Date de génération: ${date}`, pageWidth / 2, 128, { align: 'center' });
+    
+    // Résumé exécutif dans un cadre
+    doc.setTextColor(0);
+    doc.setDrawColor(198, 54, 64);
+    doc.setLineWidth(0.5);
+    doc.rect(40, 140, pageWidth - 80, 45);
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text("Résumé Exécutif", pageWidth / 2, 150, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const stats = [
+        `Terrains au registre gouvernemental: ${governmentData.length}`,
+        `Terrains municipaux recensés: ${municipalData.length}`,
+        `Terrains décontaminés validés: ${decontaminatedData.length}`,
+        `Terrains en attente de validation: ${pendingDecontaminatedData.length}`,
+        `Terrains non présents au registre officiel: ${notInOfficialData.length}`
+    ];
+    
+    let yPos = 160;
+    stats.forEach(stat => {
+        doc.text(`• ${stat}`, 50, yPos);
+        yPos += 7;
+    });
+    
+    // Note légale
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(
+        "Ce rapport a été généré automatiquement à partir des données du registre gouvernemental",
+        pageWidth / 2, 
+        pageHeight - 20, 
+        { align: 'center' }
+    );
+    doc.text(
+        "et des registres municipaux de la Ville de Val-d'Or.",
+        pageWidth / 2, 
+        pageHeight - 15, 
+        { align: 'center' }
+    );
+    
+    // Page 2: Tableau détaillé avec en-tête professionnel
+    doc.addPage();
+    doc.setTextColor(0);
+    
+    // Ajouter l'en-tête avec logo sur cette page aussi
+    await addPDFHeader(doc, "Registre Détaillé des Terrains Contaminés");
+    
+    // Tableau gouvernemental optimisé pour paysage
+    doc.autoTable({
+        html: governmentTable,
+        startY: 50,
+        margin: { left: 15, right: 15 },
+        styles: {
+            fontSize: 7,
+            cellPadding: 2,
+            overflow: 'linebreak'
+        },
+        headStyles: {
+            fillColor: [198, 54, 64],
+            textColor: 255,
+            fontStyle: 'bold',
+            fontSize: 8
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245]
+        },
+        columnStyles: {
+            0: { cellWidth: 25 }, // Référence
+            1: { cellWidth: 60 }, // Adresse
+            2: { cellWidth: 20 }, // Code postal
+            3: { cellWidth: 40 }, // État réhab
+            4: { cellWidth: 20 }, // Qual avant
+            5: { cellWidth: 20 }, // Qual après
+            6: { cellWidth: 60 }, // Contaminants
+            7: { cellWidth: 25 }, // Milieu
+            8: { cellWidth: 18 }  // Consultation
+        },
+        margin: { top: 25, bottom: 15 }
+    });
+    
+    // Pied de page pour toutes les pages
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(
+            `Ville de Val-d'Or - Rapport Terrains Contaminés - Page ${i}/${pageCount}`,
+            doc.internal.pageSize.width / 2,
+            doc.internal.pageSize.height - 10,
+            { align: 'center' }
+        );
+    }
+    
     // Sauvegarder le PDF
-    doc.save(`Rapport_Acces_Information_${date}.pdf`);
+    doc.save(`Rapport_Officiel_Terrains_Contamines_Val-dOr_${date}.pdf`);
 }
 
 /**
@@ -1040,6 +1317,12 @@ async function initializeApp() {
         // Ajouter l'écouteur pour le bouton de synchronisation
         if (syncGovernmentBtn) {
             syncGovernmentBtn.addEventListener('click', synchronizeGovernmentData);
+        }
+        
+        // Ajouter l'écouteur pour le bouton de rafraîchissement forcé
+        const forceRefreshBtn = document.getElementById('force-refresh-decontaminated');
+        if (forceRefreshBtn) {
+            forceRefreshBtn.addEventListener('click', forceRefreshCache);
         }
         
         console.log('✅ Application initialisée avec succès !');

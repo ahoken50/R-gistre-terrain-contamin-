@@ -1481,11 +1481,36 @@ async function generateAccessReport() {
     // Ajouter l'en-tête avec logo sur cette page aussi
     await addPDFHeader(doc, "Registre Détaillé des Terrains Contaminés");
     
+    // Préparer les données du tableau manuellement (éviter html: qui cause des problèmes)
+    const headers = ['Référence', 'Adresse', 'Code Postal', 'État Réhabilitation', 'Qualité avant', 'Qualité après', 'Contaminants (Sol)', 'Milieu récepteur'];
+    
+    // Fonction pour nettoyer État Réhabilitation
+    function cleanEtatRehab(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/[ØÝø=]/g, '')  // Caractères spéciaux typiques
+            .replace(/['']/g, "'")    // Normaliser apostrophes
+            .replace(/[^a-zA-Z0-9À-ÿ\s'\-()]/g, '')  // Garder seulement lettres, chiffres, accents, espaces, apostrophes normales, tirets et parenthèses
+            .replace(/\s+/g, ' ')     // Enlever espaces multiples
+            .trim();
+    }
+    
+    const tableData = governmentData.map(item => [
+        item.NO_MEF_LIEU || '',
+        item.ADR_CIV_LIEU || '',
+        item.CODE_POST_LIEU || '',
+        cleanEtatRehab(item.ETAT_REHAB || ''),  // Nettoyer ici
+        item.QUAL_SOLS_AV || '',
+        item.QUAL_SOLS || '',
+        item.CONTAM_SOL_EXTRA || '',
+        item.DESC_MILIEU_RECEPT || ''
+    ]);
+    
     // Tableau gouvernemental optimisé pour paysage Legal
     // Format Legal paysage: 355.6mm largeur - 30mm marges = 325mm disponible
-    // Laisser autoTable gérer les largeurs automatiquement
     doc.autoTable({
-        html: governmentTable,
+        head: [headers],
+        body: tableData,
         startY: 50,
         margin: { left: 15, right: 15 },
         styles: {
@@ -1494,7 +1519,9 @@ async function generateAccessReport() {
             overflow: 'linebreak',
             halign: 'left',
             valign: 'top',
-            minCellHeight: 9  // Augmenté de 8 à 9
+            minCellHeight: 9,  // Augmenté de 8 à 9
+            lineColor: [200, 200, 200],  // Bordures grises
+            lineWidth: 0.1  // Bordures fines
         },
         headStyles: {
             fillColor: [198, 54, 64],
@@ -1511,31 +1538,15 @@ async function generateAccessReport() {
         // Ajouter des bordures simples
         tableLineColor: [200, 200, 200],
         tableLineWidth: 0.1,
-        // Supprimer columnStyles fixes - laisser autoTable optimiser
         didParseCell: function(data) {
-            // Nettoyer la colonne État Réhabilitation (colonne 3)
-            if (data.column.index === 3 && data.cell.raw) {
-                let cleanText = String(data.cell.raw)
-                    .replace(/[ØÝø=]/g, '')  // Caractères spéciaux typiques
-                    .replace(/['']/g, "'")    // Normaliser apostrophes
-                    .replace(/[^a-zA-Z0-9À-ÿ\s'\-()]/g, '')  // Garder seulement lettres, chiffres, accents, espaces, apostrophes normales, tirets et parenthèses
-                    .replace(/\s+/g, ' ')     // Enlever espaces multiples
-                    .trim();
-                data.cell.text = [cleanText];
-            }
-            
             // Forcer plus de hauteur pour les colonnes avec beaucoup de texte
-            if (data.cell.raw && String(data.cell.raw).length > 50) {
+            if (data.cell.text && data.cell.text.join('').length > 50) {
                 data.cell.styles.minCellHeight = 12;
             }
             // Colonne Contaminants (index 6) a souvent beaucoup de texte
-            if (data.column.index === 6 && data.cell.raw) {
+            if (data.column.index === 6 && data.cell.text) {
                 data.cell.styles.minCellHeight = 15;
             }
-            
-            // Ajouter des bordures à toutes les cellules
-            data.cell.styles.lineColor = [200, 200, 200];
-            data.cell.styles.lineWidth = 0.1;
         }
     });
     

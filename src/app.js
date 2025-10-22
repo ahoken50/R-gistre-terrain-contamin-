@@ -188,8 +188,21 @@ function compareAndCategorizeData() {
     
     // Identifier les terrains non présents dans le registre officiel
     notInOfficialData = municipalData.filter(item => {
-        const ref = (item.reference || item.Reference || '').toString().trim().toLowerCase();
-        return ref === '' || !officialReferences.has(ref);
+        // Utiliser getColumnValue pour supporter différents noms de colonnes
+        const reference = getColumnValue(
+            item,
+            'reference',
+            'reference_menviq',
+            'no_mef_lieu',
+            'numero_menviq'
+        );
+        
+        if (!reference) {
+            return true; // Pas de référence = non officiel
+        }
+        
+        const referenceStr = String(reference).trim().toLowerCase();
+        return !officialReferences.has(referenceStr);
     });
     
     // Identifier automatiquement les terrains potentiellement décontaminés
@@ -643,7 +656,7 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
     if (data.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = showValidationButtons ? 9 : 8;
+        cell.colSpan = 9; // Toujours 9 colonnes (8 données + 1 actions)
         cell.className = 'text-center text-muted';
         cell.textContent = 'Aucune donnée disponible';
         row.appendChild(cell);
@@ -654,8 +667,20 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
     data.forEach((item, index) => {
         const row = document.createElement('tr');
         
+        // Utiliser getColumnValue pour supporter différents noms de colonnes
+        const adresse = getColumnValue(item, 'adresse', 'address') || '';
+        const lot = getColumnValue(item, 'lot', 'numero_de_lot', 'numero_lot') || '';
+        const reference = getColumnValue(item, 'reference', 'reference_menviq', 'no_mef_lieu') || 'N/A';
+        const bureauPublicite = getColumnValue(item, 'bureau_publicite', 'bureau_publicite_des_droits') || '';
+        const commentaires = getColumnValue(item, 'commentaires', 'commentaire', 'comments') || '';
+        const avisDecontamination = getColumnValue(
+            item,
+            'avis_decontamination',
+            'avis_de_decontamination',
+            'date_avis'
+        );
+        
         // Badge de statut selon la confiance
-        const hasNotice = item.avis_decontamination && item.avis_decontamination !== '';
         let statusBadge;
         if (item._confidence === 'high') {
             statusBadge = '<span class="badge bg-success" title="Avis de décontamination + Retiré du registre">🟢 Confirmé</span>';
@@ -665,20 +690,20 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
             statusBadge = '<span class="badge bg-secondary" title="Retiré du registre uniquement">⚪ Présumé</span>';
         }
         
-        const decontaminationDate = item.avis_decontamination 
-            ? formatDate(item.avis_decontamination)
+        const decontaminationDate = avisDecontamination 
+            ? formatDate(avisDecontamination)
             : 'Non spécifiée';
         
         // Colonnes
         const columns = [
-            item.adresse || '',
-            item.lot || '',
-            item.reference || 'N/A',
+            adresse,
+            lot,
+            reference,
             decontaminationDate,
-            item.bureau_publicite || '',
+            bureauPublicite,
             statusBadge,
             item._detection_criteria || '',
-            item.commentaires || ''
+            commentaires
         ];
         
         columns.forEach((value, colIndex) => {
@@ -698,14 +723,24 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
             row.appendChild(cell);
         });
         
-        // Ajouter les boutons de validation si demandé
+        // Ajouter les boutons de validation/actions
         if (showValidationButtons) {
+            // Boutons pour terrains en attente: Valider ou Rejeter
             const actionsCell = document.createElement('td');
             actionsCell.innerHTML = `
                 <button class="btn btn-sm btn-success me-1" onclick="validateDecontamination('${item._id}')">
                     ✓ Valider
                 </button>
                 <button class="btn btn-sm btn-danger" onclick="rejectDecontamination('${item._id}')">
+                    ✗ Rejeter
+                </button>
+            `;
+            row.appendChild(actionsCell);
+        } else {
+            // Bouton pour terrains validés: Annuler la validation (rejeter)
+            const actionsCell = document.createElement('td');
+            actionsCell.innerHTML = `
+                <button class="btn btn-sm btn-outline-danger" onclick="rejectDecontamination('${item._id}')" title="Annuler la validation de ce terrain">
                     ✗ Rejeter
                 </button>
             `;
@@ -1011,9 +1046,18 @@ function calculateDecontaminationStats() {
     const statsByYear = {};
     
     decontaminatedData.forEach(item => {
-        if (item.avis_decontamination) {
+        // Utiliser getColumnValue pour supporter différents noms de colonnes
+        const avisDecontamination = getColumnValue(
+            item,
+            'avis_decontamination',
+            'avis_de_decontamination',
+            'date_avis',
+            'avis_decontamination_date'
+        );
+        
+        if (avisDecontamination) {
             try {
-                const year = new Date(item.avis_decontamination).getFullYear();
+                const year = new Date(avisDecontamination).getFullYear();
                 statsByYear[year] = (statsByYear[year] || 0) + 1;
             } catch (e) {
                 // Ignorer les dates invalides
@@ -1120,27 +1164,37 @@ async function exportTableToPDF(table, title) {
     // Ajouter l'en-tête avec logo
     const startY = await addPDFHeader(doc, title);
     
-    // Ajouter le tableau avec colonnes optimisées pour paysage
+    // Ajouter le tableau avec colonnes optimisées pour paysage Legal (325mm de largeur disponible)
     doc.autoTable({
         html: table,
         startY: startY + 5,
         margin: { left: 15, right: 15 },
         styles: {
-            fontSize: 8,
-            cellPadding: 3,
+            fontSize: 7,
+            cellPadding: 2,
             overflow: 'linebreak',
-            cellWidth: 'auto'
+            halign: 'left',
+            valign: 'middle'
         },
         headStyles: {
             fillColor: [198, 54, 64], // Rouge de Val-d'Or
             textColor: 255,
             fontStyle: 'bold',
-            fontSize: 9
+            fontSize: 8,
+            halign: 'center'
         },
         alternateRowStyles: {
             fillColor: [245, 245, 245]
         },
-        tableWidth: 'auto'
+        tableWidth: 'wrap',
+        columnStyles: {
+            0: { cellWidth: 40 },  // Adresse
+            1: { cellWidth: 25 },  // Lot
+            2: { cellWidth: 30 },  // Référence
+            3: { cellWidth: 25 },  // Date
+            4: { cellWidth: 30 },  // Bureau publicité
+            5: { cellWidth: 'auto' } // Commentaires (prend le reste)
+        }
     });
     
     // Pied de page
@@ -1264,7 +1318,7 @@ async function generateAccessReport() {
     // Ajouter l'en-tête avec logo sur cette page aussi
     await addPDFHeader(doc, "Registre Détaillé des Terrains Contaminés");
     
-    // Tableau gouvernemental optimisé pour paysage
+    // Tableau gouvernemental optimisé pour paysage Legal
     doc.autoTable({
         html: governmentTable,
         startY: 50,
@@ -1272,29 +1326,27 @@ async function generateAccessReport() {
         styles: {
             fontSize: 7,
             cellPadding: 2,
-            overflow: 'linebreak'
+            overflow: 'linebreak',
+            halign: 'left',
+            valign: 'middle'
         },
         headStyles: {
             fillColor: [198, 54, 64],
             textColor: 255,
             fontStyle: 'bold',
-            fontSize: 8
+            fontSize: 8,
+            halign: 'center'
         },
         alternateRowStyles: {
             fillColor: [245, 245, 245]
         },
+        tableWidth: 'wrap',
         columnStyles: {
-            0: { cellWidth: 25 }, // Référence
-            1: { cellWidth: 60 }, // Adresse
-            2: { cellWidth: 20 }, // Code postal
-            3: { cellWidth: 40 }, // État réhab
-            4: { cellWidth: 20 }, // Qual avant
-            5: { cellWidth: 20 }, // Qual après
-            6: { cellWidth: 60 }, // Contaminants
-            7: { cellWidth: 25 }, // Milieu
-            8: { cellWidth: 18 }  // Consultation
-        },
-        margin: { top: 25, bottom: 15 }
+            0: { cellWidth: 35 },  // Référence
+            1: { cellWidth: 50 },  // Adresse
+            2: { cellWidth: 30 },  // État réhabilitation
+            3: { cellWidth: 'auto' } // Fiches (prend le reste)
+        }
     });
     
     // Pied de page pour toutes les pages

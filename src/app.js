@@ -187,7 +187,7 @@ function compareAndCategorizeData() {
     );
     
     // Identifier les terrains non présents dans le registre officiel
-    notInOfficialData = municipalData.filter(item => {
+    notInOfficialData = municipalData.filter((item, index) => {
         // Utiliser getColumnValue pour supporter différents noms de colonnes
         const reference = getColumnValue(
             item,
@@ -202,7 +202,14 @@ function compareAndCategorizeData() {
         }
         
         const referenceStr = String(reference).trim().toLowerCase();
-        return !officialReferences.has(referenceStr);
+        const isInOfficialRegistry = officialReferences.has(referenceStr);
+        
+        // DEBUG: Log les premiers terrains
+        if (index < 3) {
+            console.log(`🔍 Terrain ${index}: ref="${referenceStr}", dans registre=${isInOfficialRegistry}`);
+        }
+        
+        return !isInOfficialRegistry;
     });
     
     // Identifier automatiquement les terrains potentiellement décontaminés
@@ -724,14 +731,16 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
         });
         
         // Ajouter les boutons de validation/actions
+        const escapedId = (item._id || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        
         if (showValidationButtons) {
             // Boutons pour terrains en attente: Valider ou Rejeter
             const actionsCell = document.createElement('td');
             actionsCell.innerHTML = `
-                <button class="btn btn-sm btn-success me-1" onclick="validateDecontamination('${item._id}')">
+                <button class="btn btn-sm btn-success me-1" onclick="validateDecontamination('${escapedId}')">
                     ✓ Valider
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="rejectDecontamination('${item._id}')">
+                <button class="btn btn-sm btn-danger" onclick="rejectDecontamination('${escapedId}')">
                     ✗ Rejeter
                 </button>
             `;
@@ -740,7 +749,7 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
             // Bouton pour terrains validés: Annuler la validation (rejeter)
             const actionsCell = document.createElement('td');
             actionsCell.innerHTML = `
-                <button class="btn btn-sm btn-outline-danger" onclick="rejectDecontamination('${item._id}')" title="Annuler la validation de ce terrain">
+                <button class="btn btn-sm btn-outline-danger" onclick="rejectDecontamination('${escapedId}')" title="Annuler la validation de ce terrain">
                     ✗ Rejeter
                 </button>
             `;
@@ -1174,7 +1183,8 @@ async function exportTableToPDF(table, title) {
             cellPadding: 2,
             overflow: 'linebreak',
             halign: 'left',
-            valign: 'middle'
+            valign: 'middle',
+            cellWidth: 'wrap'
         },
         headStyles: {
             fillColor: [198, 54, 64], // Rouge de Val-d'Or
@@ -1186,15 +1196,7 @@ async function exportTableToPDF(table, title) {
         alternateRowStyles: {
             fillColor: [245, 245, 245]
         },
-        tableWidth: 'wrap',
-        columnStyles: {
-            0: { cellWidth: 40 },  // Adresse
-            1: { cellWidth: 25 },  // Lot
-            2: { cellWidth: 30 },  // Référence
-            3: { cellWidth: 25 },  // Date
-            4: { cellWidth: 30 },  // Bureau publicité
-            5: { cellWidth: 'auto' } // Commentaires (prend le reste)
-        }
+        tableWidth: 'auto'
     });
     
     // Pied de page
@@ -1342,10 +1344,15 @@ async function generateAccessReport() {
         },
         tableWidth: 'wrap',
         columnStyles: {
-            0: { cellWidth: 35 },  // Référence
-            1: { cellWidth: 50 },  // Adresse
-            2: { cellWidth: 30 },  // État réhabilitation
-            3: { cellWidth: 'auto' } // Fiches (prend le reste)
+            0: { cellWidth: 30 },  // Référence
+            1: { cellWidth: 55 },  // Adresse
+            2: { cellWidth: 20 },  // Code postal
+            3: { cellWidth: 35 },  // État réhabilitation
+            4: { cellWidth: 25 },  // Qualité avant
+            5: { cellWidth: 25 },  // Qualité après
+            6: { cellWidth: 50 },  // Contaminants
+            7: { cellWidth: 25 },  // Milieu récepteur
+            8: { cellWidth: 20 }   // Consultation
         }
     });
     

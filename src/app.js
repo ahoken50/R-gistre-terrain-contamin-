@@ -186,7 +186,14 @@ function compareAndCategorizeData() {
         })
     );
     
+    // DEBUG: Afficher échantillon des références gouvernementales
+    const govRefsArray = Array.from(officialReferences).slice(0, 5);
+    console.log('📋 Échantillon références gouvernementales:', govRefsArray);
+    
     // Identifier les terrains non présents dans le registre officiel
+    let countWithReference = 0;
+    let countInRegistry = 0;
+    
     notInOfficialData = municipalData.filter((item, index) => {
         // Utiliser getColumnValue pour supporter différents noms de colonnes
         const reference = getColumnValue(
@@ -201,16 +208,27 @@ function compareAndCategorizeData() {
             return true; // Pas de référence = non officiel
         }
         
+        countWithReference++;
         const referenceStr = String(reference).trim().toLowerCase();
         const isInOfficialRegistry = officialReferences.has(referenceStr);
         
-        // DEBUG: Log les premiers terrains
-        if (index < 3) {
-            console.log(`🔍 Terrain ${index}: ref="${referenceStr}", dans registre=${isInOfficialRegistry}`);
+        if (isInOfficialRegistry) {
+            countInRegistry++;
+        }
+        
+        // DEBUG: Log TOUS les terrains avec référence
+        if (reference) {
+            console.log(`🔍 Terrain ${index} [${getColumnValue(item, 'adresse', 'address')}]: ref="${referenceStr}", dans registre=${isInOfficialRegistry}`);
         }
         
         return !isInOfficialRegistry;
     });
+    
+    console.log(`📊 Résumé terrains municipaux:`);
+    console.log(`  - Total: ${municipalData.length}`);
+    console.log(`  - Avec référence: ${countWithReference}`);
+    console.log(`  - Trouvés dans registre gouv: ${countInRegistry}`);
+    console.log(`  - Non officiels: ${notInOfficialData.length}`);
     
     // Identifier automatiquement les terrains potentiellement décontaminés
     identifyDecontaminatedLands(officialReferences);
@@ -404,6 +422,19 @@ function identifyDecontaminatedLands(officialReferences) {
     console.log(`✅ Détection terminée:`);
     console.log(`  - ${decontaminatedData.length} terrains décontaminés validés`);
     console.log(`  - ${pendingDecontaminatedData.length} terrains en attente de validation`);
+    
+    // DEBUG: Afficher les IDs validés vs détectés
+    if (decontaminatedData.length === 0 && validatedIds.length > 0) {
+        console.warn(`⚠️ PROBLÈME: ${validatedIds.length} IDs validés dans localStorage mais 0 terrains dans decontaminatedData!`);
+        console.warn('IDs validés:', validatedIds);
+        console.warn('ItemIds des terrains municipaux (premiers 5):', 
+            municipalData.slice(0, 5).map(item => {
+                const adresse = getColumnValue(item, 'adresse', 'address') || '';
+                const lot = getColumnValue(item, 'lot', 'numero_de_lot') || '';
+                return `${adresse}_${lot}`;
+            })
+        );
+    }
 }
 
 /**
@@ -802,6 +833,12 @@ window.validateDecontamination = function(itemId) {
     compareAndCategorizeData();
     updateStatistics();
     displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    
+    // Mettre à jour le compteur
+    const countElement = document.getElementById('decontaminated-filtered-count');
+    if (countElement) {
+        countElement.textContent = decontaminatedData.length;
+    }
     displayPendingDecontaminatedData();
     
     showNotification('Terrain validé avec succès!', 'success');
@@ -836,6 +873,12 @@ window.rejectDecontamination = function(itemId) {
     compareAndCategorizeData();
     updateStatistics();
     displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    
+    // Mettre à jour le compteur
+    const countElement = document.getElementById('decontaminated-filtered-count');
+    if (countElement) {
+        countElement.textContent = decontaminatedData.length;
+    }
     displayPendingDecontaminatedData();
     
     showNotification('Terrain rejeté', 'info');
@@ -886,6 +929,12 @@ function forceRefreshCache() {
     displayGovernmentData(governmentTable, governmentData);
     displayDataInTable(notInOfficialTable, notInOfficialData);
     displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    
+    // Mettre à jour le compteur
+    const countElement = document.getElementById('decontaminated-filtered-count');
+    if (countElement) {
+        countElement.textContent = decontaminatedData.length;
+    }
     displayPendingDecontaminatedData();
     
     // Recalculer les stats de décontamination
@@ -1032,6 +1081,12 @@ async function synchronizeGovernmentData() {
         displayGovernmentData(governmentTable, governmentData);
         displayDataInTable(notInOfficialTable, notInOfficialData);
         displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    
+    // Mettre à jour le compteur
+    const countElement = document.getElementById('decontaminated-filtered-count');
+    if (countElement) {
+        countElement.textContent = decontaminatedData.length;
+    }
         displayPendingDecontaminatedData();
         
         showNotification('Données gouvernementales synchronisées avec succès!', 'success');
@@ -1254,32 +1309,39 @@ async function generateAccessReport() {
     }
     
     // Titre principal
-    doc.setFontSize(24);
+    doc.setFontSize(26);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(198, 54, 64); // Rouge Val-d'Or
-    doc.text("Rapport d'Accès à l'Information", pageWidth / 2, 90, { align: 'center' });
+    doc.text("Rapport d'Accès à l'Information", pageWidth / 2, 85, { align: 'center' });
     
     doc.setTextColor(0);
-    doc.setFontSize(18);
-    doc.text("Registre des Terrains Contaminés", pageWidth / 2, 102, { align: 'center' });
+    doc.setFontSize(20);
+    doc.text("Registre des Terrains Contaminés", pageWidth / 2, 98, { align: 'center' });
     
     // Informations officielles
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'normal');
-    doc.text("Ville de Val-d'Or", pageWidth / 2, 120, { align: 'center' });
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text("Ville de Val-d'Or", pageWidth / 2, 115, { align: 'center' });
+    
     doc.setFontSize(12);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(60);
+    doc.text("Extraction du répertoire officiel provincial", pageWidth / 2, 125, { align: 'center' });
+    doc.text("Dans le cadre d'une demande d'accès à l'information", pageWidth / 2, 132, { align: 'center' });
+    
+    doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text(`Date de génération: ${date}`, pageWidth / 2, 128, { align: 'center' });
+    doc.text(`Date de mise à jour: ${date}`, pageWidth / 2, 142, { align: 'center' });
     
     // Résumé exécutif dans un cadre
     doc.setTextColor(0);
     doc.setDrawColor(198, 54, 64);
     doc.setLineWidth(0.5);
-    doc.rect(40, 140, pageWidth - 80, 45);
+    doc.rect(40, 155, pageWidth - 80, 45);
     
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text("Résumé Exécutif", pageWidth / 2, 150, { align: 'center' });
+    doc.text("Résumé Exécutif", pageWidth / 2, 165, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
@@ -1291,7 +1353,7 @@ async function generateAccessReport() {
         `Terrains non présents au registre officiel: ${notInOfficialData.length}`
     ];
     
-    let yPos = 160;
+    let yPos = 175;
     stats.forEach(stat => {
         doc.text(`• ${stat}`, 50, yPos);
         yPos += 7;
@@ -1344,15 +1406,15 @@ async function generateAccessReport() {
         },
         tableWidth: 'wrap',
         columnStyles: {
-            0: { cellWidth: 30 },  // Référence
-            1: { cellWidth: 55 },  // Adresse
-            2: { cellWidth: 20 },  // Code postal
-            3: { cellWidth: 35 },  // État réhabilitation
-            4: { cellWidth: 25 },  // Qualité avant
-            5: { cellWidth: 25 },  // Qualité après
-            6: { cellWidth: 50 },  // Contaminants
-            7: { cellWidth: 25 },  // Milieu récepteur
-            8: { cellWidth: 20 }   // Consultation
+            0: { cellWidth: 28 },  // Référence
+            1: { cellWidth: 50 },  // Adresse
+            2: { cellWidth: 18 },  // Code postal
+            3: { cellWidth: 32 },  // État réhabilitation
+            4: { cellWidth: 22 },  // Qualité avant
+            5: { cellWidth: 22 },  // Qualité après
+            6: { cellWidth: 60, overflow: 'linebreak', cellPadding: 2 },  // Contaminants (avec retours de ligne)
+            7: { cellWidth: 28 },  // Milieu récepteur
+            8: { cellWidth: 18 }   // Consultation
         }
     });
     
@@ -1399,6 +1461,12 @@ async function initializeApp() {
         displayGovernmentData(governmentTable, governmentData);
         displayDataInTable(notInOfficialTable, notInOfficialData);
         displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    
+    // Mettre à jour le compteur
+    const countElement = document.getElementById('decontaminated-filtered-count');
+    if (countElement) {
+        countElement.textContent = decontaminatedData.length;
+    }
         displayPendingDecontaminatedData();
         
         // Calculer les statistiques de décontamination

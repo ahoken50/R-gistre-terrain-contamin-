@@ -178,54 +178,40 @@ async function loadGovernmentData() {
 function compareAndCategorizeData() {
     console.log('🔍 Comparaison et catégorisation des données...');
     
-    // DEBUG: Afficher les noms de colonnes des données gouvernementales
-    if (governmentData.length > 0) {
-        console.log('📋 Colonnes données gouvernementales:', Object.keys(governmentData[0]));
-        console.log('📋 Premier terrain gouvernemental:', governmentData[0]);
-    }
-    
-    // Créer un Set des références officielles pour recherche rapide
-    const officialReferences = new Set(
+    // Créer un Set des adresses officielles (gouvernementales) normalisées
+    const officialAddresses = new Set(
         governmentData.map(item => {
-            const ref = item.reference || item.Reference || item.ID || item.NO_MEF_LIEU;
-            return (ref || '').toString().trim().toLowerCase();
-        })
+            const address = item.ADRESSE || item.adresse || item.address || '';
+            return normalizeAddress(address);
+        }).filter(addr => addr !== '')
     );
     
-    // DEBUG: Afficher échantillon des références gouvernementales
-    const govRefsArray = Array.from(officialReferences).slice(0, 10);
-    console.log('📋 Références gouvernementales (10 premières):', govRefsArray);
-    console.log('📋 Total références gouvernementales:', officialReferences.size);
+    console.log(`📋 Total adresses gouvernementales: ${officialAddresses.size}`);
+    console.log('📋 Échantillon adresses gouvernementales normalisées:', 
+        Array.from(officialAddresses).slice(0, 5));
     
-    // Identifier les terrains non présents dans le registre officiel
-    let countWithReference = 0;
+    // Identifier les terrains non présents dans le registre officiel (par ADRESSE)
     let countInRegistry = 0;
     
     notInOfficialData = municipalData.filter((item, index) => {
-        // Utiliser getColumnValue pour supporter différents noms de colonnes
-        const reference = getColumnValue(
-            item,
-            'reference',
-            'reference_menviq',
-            'no_mef_lieu',
-            'numero_menviq'
-        );
+        const municipalAddress = getColumnValue(item, 'adresse', 'address', 'ADRESSE') || '';
+        const normalizedMunicipalAddr = normalizeAddress(municipalAddress);
         
-        if (!reference) {
-            return true; // Pas de référence = non officiel
+        if (!normalizedMunicipalAddr) {
+            return true; // Pas d'adresse = non officiel
         }
         
-        countWithReference++;
-        const referenceStr = String(reference).trim().toLowerCase();
-        const isInOfficialRegistry = officialReferences.has(referenceStr);
+        const isInOfficialRegistry = officialAddresses.has(normalizedMunicipalAddr);
         
         if (isInOfficialRegistry) {
             countInRegistry++;
         }
         
-        // DEBUG: Log TOUS les terrains avec référence
-        if (reference) {
-            console.log(`🔍 Terrain ${index} [${getColumnValue(item, 'adresse', 'address')}]: ref="${referenceStr}", dans registre=${isInOfficialRegistry}`);
+        // DEBUG: Log premiers terrains
+        if (index < 5) {
+            console.log(`🔍 Terrain ${index} [${municipalAddress}]:`);
+            console.log(`   Normalisé: "${normalizedMunicipalAddr}"`);
+            console.log(`   Dans registre: ${isInOfficialRegistry}`);
         }
         
         return !isInOfficialRegistry;
@@ -233,8 +219,7 @@ function compareAndCategorizeData() {
     
     console.log(`📊 Résumé terrains municipaux:`);
     console.log(`  - Total: ${municipalData.length}`);
-    console.log(`  - Avec référence: ${countWithReference}`);
-    console.log(`  - Trouvés dans registre gouv: ${countInRegistry}`);
+    console.log(`  - Trouvés dans registre gouv (par adresse): ${countInRegistry}`);
     console.log(`  - Non officiels: ${notInOfficialData.length}`);
     
     // Identifier automatiquement les terrains potentiellement décontaminés
@@ -260,6 +245,46 @@ function getColumnValue(item, ...possibleNames) {
         }
     }
     return null;
+}
+
+/**
+ * Normaliser une adresse pour comparaison
+ * - Enlever espaces multiples
+ * - Minuscules
+ * - Enlever ponctuation
+ * - Uniformiser rue/avenue/chemin
+ */
+function normalizeAddress(address) {
+    if (!address) return '';
+    
+    let normalized = String(address).toLowerCase().trim();
+    
+    // Enlever les accents
+    normalized = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    
+    // Uniformiser les abréviations
+    normalized = normalized
+        .replace(/\bave\b\.?/g, 'avenue')
+        .replace(/\bav\b\.?/g, 'avenue')
+        .replace(/\bch\b\.?/g, 'chemin')
+        .replace(/\bboul\b\.?/g, 'boulevard')
+        .replace(/\bbd\b\.?/g, 'boulevard')
+        .replace(/\brue\b/g, 'rue')
+        .replace(/\broute\b/g, 'route')
+        .replace(/\brt\b\.?/g, 'route');
+    
+    // Enlever ponctuation et espaces multiples
+    normalized = normalized.replace(/[,\.]/g, ' ').replace(/\s+/g, ' ').trim();
+    
+    // Extraire juste le numéro et la rue (sans ville)
+    // Ex: "1185 des foreurs val-d'or" -> "1185 des foreurs"
+    const parts = normalized.split(' ');
+    if (parts.length > 4) {
+        // Garder les 4 premiers mots max (numéro + nom rue)
+        normalized = parts.slice(0, 4).join(' ');
+    }
+    
+    return normalized;
 }
 
 /**
@@ -1390,38 +1415,47 @@ async function generateAccessReport() {
     await addPDFHeader(doc, "Registre Détaillé des Terrains Contaminés");
     
     // Tableau gouvernemental optimisé pour paysage Legal
+    // Format Legal paysage: 355.6mm largeur - 30mm marges = 325mm disponible
     doc.autoTable({
         html: governmentTable,
         startY: 50,
         margin: { left: 15, right: 15 },
         styles: {
-            fontSize: 7,
-            cellPadding: 2,
+            fontSize: 6,
+            cellPadding: 1.5,
             overflow: 'linebreak',
             halign: 'left',
-            valign: 'middle'
+            valign: 'top',
+            minCellHeight: 10  // Hauteur minimum pour permettre 2+ lignes
         },
         headStyles: {
             fillColor: [198, 54, 64],
             textColor: 255,
             fontStyle: 'bold',
-            fontSize: 8,
-            halign: 'center'
+            fontSize: 7,
+            halign: 'center',
+            minCellHeight: 8
         },
         alternateRowStyles: {
             fillColor: [245, 245, 245]
         },
         tableWidth: 'auto',
         columnStyles: {
-            0: { cellWidth: 25 },  // Référence
-            1: { cellWidth: 45 },  // Adresse
-            2: { cellWidth: 15 },  // Code postal
-            3: { cellWidth: 30 },  // État réhabilitation
-            4: { cellWidth: 20 },  // Qualité avant
-            5: { cellWidth: 20 },  // Qualité après
-            6: { cellWidth: 80, overflow: 'linebreak' },  // Contaminants (avec retours de ligne - PLUS LARGE)
-            7: { cellWidth: 25 },  // Milieu récepteur
-            8: { cellWidth: 15 }   // Consultation
+            0: { cellWidth: 22 },  // Référence
+            1: { cellWidth: 40 },  // Adresse
+            2: { cellWidth: 12 },  // Code postal
+            3: { cellWidth: 28 },  // État réhabilitation
+            4: { cellWidth: 18 },  // Qualité avant
+            5: { cellWidth: 18 },  // Qualité après
+            6: { cellWidth: 85, overflow: 'linebreak', minCellHeight: 12 },  // Contaminants - LARGE avec hauteur min
+            7: { cellWidth: 22 },  // Milieu récepteur
+            8: { cellWidth: 12 }   // Consultation
+        },
+        didParseCell: function(data) {
+            // Forcer la hauteur minimale pour la colonne Contaminants
+            if (data.column.index === 6 && data.cell.raw && String(data.cell.raw).length > 50) {
+                data.cell.styles.minCellHeight = 15;
+            }
         }
     });
     

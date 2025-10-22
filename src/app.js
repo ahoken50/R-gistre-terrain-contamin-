@@ -180,22 +180,33 @@ function compareAndCategorizeData() {
     
     // DEBUG: Voir les colonnes des données gouvernementales
     if (governmentData.length > 0) {
-        console.log('📋 Colonnes données gouvernementales:', Object.keys(governmentData[0]));
+        const columns = Object.keys(governmentData[0]);
+        console.log('📋 Colonnes données gouvernementales:', columns.join(', '));
         const firstItem = governmentData[0];
-        console.log('📋 Premier terrain gouv - échantillon:', {
-            adresse: firstItem.ADRESSE || firstItem.adresse || firstItem.address,
-            reference: firstItem.NO_MEF_LIEU || firstItem.reference,
-            etat: firstItem.ETAT_REHAB
-        });
+        
+        // Essayer tous les noms de colonnes possibles pour l'adresse
+        let adresseGouv = null;
+        for (const col of columns) {
+            if (col.toLowerCase().includes('adresse') || col.toLowerCase().includes('address')) {
+                adresseGouv = firstItem[col];
+                console.log(`📋 Colonne adresse trouvée: "${col}" = "${adresseGouv}"`);
+                break;
+            }
+        }
+        
+        console.log('📋 Premier terrain gouv complet:', firstItem);
     }
     
-    // Créer un Set des adresses officielles (gouvernementales) normalisées
-    const officialAddresses = new Set(
-        governmentData.map(item => {
-            const address = item.ADRESSE || item.adresse || item.address || '';
-            return normalizeAddress(address);
-        }).filter(addr => addr !== '')
-    );
+    // Extraire toutes les adresses gouvernementales (avec tous noms de colonnes possibles)
+    const officialAddresses = governmentData.map(item => {
+        // Chercher la colonne qui contient "adresse" dans son nom
+        for (const key of Object.keys(item)) {
+            if (key.toLowerCase().includes('adresse') || key.toLowerCase().includes('address')) {
+                return item[key] || '';
+            }
+        }
+        return '';
+    }).filter(addr => addr !== '');
     
     // Créer aussi un Set des références pour identifyDecontaminatedLands()
     const officialReferences = new Set(
@@ -205,23 +216,28 @@ function compareAndCategorizeData() {
         }).filter(ref => ref !== '')
     );
     
-    console.log(`📋 Total adresses gouvernementales: ${officialAddresses.size}`);
+    console.log(`📋 Total adresses gouvernementales: ${officialAddresses.length}`);
     console.log(`📋 Total références gouvernementales: ${officialReferences.size}`);
-    console.log('📋 Échantillon adresses gouvernementales normalisées:', 
-        Array.from(officialAddresses).slice(0, 5));
+    console.log('📋 Échantillon adresses gouvernementales:', officialAddresses.slice(0, 3));
     
-    // Identifier les terrains non présents dans le registre officiel (par ADRESSE)
+    // Identifier les terrains non présents dans le registre officiel (par SIMILARITÉ D'ADRESSE)
     let countInRegistry = 0;
     
     notInOfficialData = municipalData.filter((item, index) => {
         const municipalAddress = getColumnValue(item, 'adresse', 'address', 'ADRESSE') || '';
-        const normalizedMunicipalAddr = normalizeAddress(municipalAddress);
         
-        if (!normalizedMunicipalAddr) {
+        if (!municipalAddress) {
             return true; // Pas d'adresse = non officiel
         }
         
-        const isInOfficialRegistry = officialAddresses.has(normalizedMunicipalAddr);
+        // Vérifier si l'adresse municipale est similaire à une adresse gouvernementale
+        let isInOfficialRegistry = false;
+        for (const govAddress of officialAddresses) {
+            if (addressesAreSimilar(municipalAddress, govAddress)) {
+                isInOfficialRegistry = true;
+                break;
+            }
+        }
         
         if (isInOfficialRegistry) {
             countInRegistry++;
@@ -229,8 +245,9 @@ function compareAndCategorizeData() {
         
         // DEBUG: Log premiers terrains
         if (index < 5) {
+            const core = getAddressCore(municipalAddress);
             console.log(`🔍 Terrain ${index} [${municipalAddress}]:`);
-            console.log(`   Normalisé: "${normalizedMunicipalAddr}"`);
+            console.log(`   Core: "${core}"`);
             console.log(`   Dans registre: ${isInOfficialRegistry}`);
         }
         
@@ -291,20 +308,59 @@ function normalizeAddress(address) {
         .replace(/\bbd\b\.?/g, 'boulevard')
         .replace(/\brue\b/g, 'rue')
         .replace(/\broute\b/g, 'route')
-        .replace(/\brt\b\.?/g, 'route');
+        .replace(/\brt\b\.?/g, 'route')
+        .replace(/\bouest\b/g, 'ouest')
+        .replace(/\best\b/g, 'est')
+        .replace(/\bnord\b/g, 'nord')
+        .replace(/\bsud\b/g, 'sud');
     
     // Enlever ponctuation et espaces multiples
     normalized = normalized.replace(/[,\.]/g, ' ').replace(/\s+/g, ' ').trim();
     
-    // Extraire juste le numéro et la rue (sans ville)
-    // Ex: "1185 des foreurs val-d'or" -> "1185 des foreurs"
-    const parts = normalized.split(' ');
-    if (parts.length > 4) {
-        // Garder les 4 premiers mots max (numéro + nom rue)
-        normalized = parts.slice(0, 4).join(' ');
-    }
+    // Enlever les mentions de ville/province
+    normalized = normalized.replace(/val-d'or/g, '').replace(/\(quebec\)/g, '').replace(/quebec/g, '');
+    normalized = normalized.replace(/\s+/g, ' ').trim();
     
     return normalized;
+}
+
+/**
+ * Extraire la partie significative d'une adresse (numéro + rue de base)
+ * Ex: "725 3e avenue ouest" -> "725 3e avenue"
+ * Ex: "1185 des foreurs" -> "1185 des foreurs"
+ */
+function getAddressCore(address) {
+    const normalized = normalizeAddress(address);
+    const parts = normalized.split(' ');
+    
+    // Garder numéro + max 3 mots suivants (avant les directions ouest/est/nord/sud)
+    let core = [];
+    for (let i = 0; i < Math.min(4, parts.length); i++) {
+        const word = parts[i];
+        // Arrêter si on trouve une direction ou mention de ville
+        if (['ouest', 'est', 'nord', 'sud', 'o', 'e', 'n', 's'].includes(word)) {
+            break;
+        }
+        core.push(word);
+    }
+    
+    return core.join(' ');
+}
+
+/**
+ * Vérifier si deux adresses sont similaires
+ * Compare le "core" de l'adresse (numéro + rue) sans les directions/ville
+ */
+function addressesAreSimilar(addr1, addr2) {
+    if (!addr1 || !addr2) return false;
+    
+    const core1 = getAddressCore(addr1);
+    const core2 = getAddressCore(addr2);
+    
+    // Vérifier si un core est contenu dans l'autre (pour gérer variations)
+    return core1 === core2 || 
+           core1.includes(core2) || 
+           core2.includes(core1);
 }
 
 /**
@@ -1436,6 +1492,7 @@ async function generateAccessReport() {
     
     // Tableau gouvernemental optimisé pour paysage Legal
     // Format Legal paysage: 355.6mm largeur - 30mm marges = 325mm disponible
+    // Laisser autoTable gérer les largeurs automatiquement
     doc.autoTable({
         html: governmentTable,
         startY: 50,
@@ -1446,7 +1503,7 @@ async function generateAccessReport() {
             overflow: 'linebreak',
             halign: 'left',
             valign: 'top',
-            minCellHeight: 10  // Hauteur minimum pour permettre 2+ lignes
+            minCellHeight: 8  // Hauteur minimum pour permettre retours ligne
         },
         headStyles: {
             fillColor: [198, 54, 64],
@@ -1454,26 +1511,20 @@ async function generateAccessReport() {
             fontStyle: 'bold',
             fontSize: 7,
             halign: 'center',
-            minCellHeight: 8
+            minCellHeight: 7
         },
         alternateRowStyles: {
             fillColor: [245, 245, 245]
         },
         tableWidth: 'auto',
-        columnStyles: {
-            0: { cellWidth: 22 },  // Référence
-            1: { cellWidth: 40 },  // Adresse
-            2: { cellWidth: 12 },  // Code postal
-            3: { cellWidth: 28 },  // État réhabilitation
-            4: { cellWidth: 18 },  // Qualité avant
-            5: { cellWidth: 18 },  // Qualité après
-            6: { cellWidth: 85, overflow: 'linebreak', minCellHeight: 12 },  // Contaminants - LARGE avec hauteur min
-            7: { cellWidth: 22 },  // Milieu récepteur
-            8: { cellWidth: 12 }   // Consultation
-        },
+        // Supprimer columnStyles fixes - laisser autoTable optimiser
         didParseCell: function(data) {
-            // Forcer la hauteur minimale pour la colonne Contaminants
-            if (data.column.index === 6 && data.cell.raw && String(data.cell.raw).length > 50) {
+            // Forcer plus de hauteur pour les colonnes avec beaucoup de texte
+            if (data.cell.raw && String(data.cell.raw).length > 50) {
+                data.cell.styles.minCellHeight = 12;
+            }
+            // Colonne Contaminants (index 6) a souvent beaucoup de texte
+            if (data.column.index === 6 && data.cell.raw) {
                 data.cell.styles.minCellHeight = 15;
             }
         }

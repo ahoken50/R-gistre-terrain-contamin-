@@ -232,6 +232,12 @@ function identifyDecontaminatedLands(officialReferences) {
         const sampleItem = municipalData[0];
         const columnNames = Object.keys(sampleItem);
         console.log('📋 Noms de colonnes détectés dans les données municipales:', columnNames);
+        console.log('📋 Exemple de données du premier terrain:');
+        columnNames.forEach(col => {
+            const value = sampleItem[col];
+            const displayValue = value ? String(value).substring(0, 50) : '(vide)';
+            console.log(`  - ${col}: ${displayValue}`);
+        });
     }
     
     // Récupérer les terrains déjà validés depuis localStorage

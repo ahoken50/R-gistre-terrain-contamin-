@@ -773,13 +773,23 @@ function createQualityBadge(quality) {
  * Afficher les terrains décontaminés avec badges de statut et actions de validation
  */
 function displayDecontaminatedData(table, data, showValidationButtons = false) {
+    console.log('🔍 displayDecontaminatedData appelée:', {
+        tableId: table?.id,
+        dataLength: data.length,
+        showValidationButtons: showValidationButtons
+    });
+    
     const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        console.error('❌ tbody introuvable dans la table:', table);
+        return;
+    }
     tbody.innerHTML = '';
     
     if (data.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 9; // Toujours 9 colonnes (8 données + 1 actions)
+        cell.colSpan = showValidationButtons ? 9 : 8; // 8 colonnes données + 1 actions (si boutons)
         cell.className = 'text-center text-muted';
         cell.textContent = 'Aucune donnée disponible';
         row.appendChild(cell);
@@ -1020,7 +1030,6 @@ function forceRefreshCache() {
     // Rafraîchir tous les affichages
     displayDataInTable(municipalTable, municipalData);
     displayGovernmentData(governmentTable, governmentData);
-    displayDataInTable(notInOfficialTable, notInOfficialData);
     displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
     
     // Mettre à jour le compteur
@@ -1172,7 +1181,6 @@ async function synchronizeGovernmentData() {
         
         // Rafraîchir tous les affichages
         displayGovernmentData(governmentTable, governmentData);
-        displayDataInTable(notInOfficialTable, notInOfficialData);
         displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
     
     // Mettre à jour le compteur
@@ -1668,7 +1676,6 @@ async function initializeApp() {
         // Afficher les données initiales
         displayDataInTable(municipalTable, municipalData);
         displayGovernmentData(governmentTable, governmentData);
-        displayDataInTable(notInOfficialTable, notInOfficialData);
         displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
     
     // Mettre à jour le compteur
@@ -1710,8 +1717,6 @@ async function initializeApp() {
             exportTableToPDF(municipalTable, 'Terrains_Contamines_Municipaux'));
         exportPdfGovernmentBtn.addEventListener('click', () => 
             exportTableToPDF(governmentTable, 'Repertoire_Officiel_Gouvernemental'));
-        exportPdfNotInOfficialBtn.addEventListener('click', () => 
-            exportTableToPDF(notInOfficialTable, 'Terrains_Non_Presents_Registre_Officiel'));
         exportPdfDecontaminatedBtn.addEventListener('click', () => 
             exportTableToPDF(decontaminatedTable, 'Terrains_Decontamines_Archives'));
         

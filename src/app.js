@@ -564,7 +564,7 @@ function updateStatistics() {
 }
 
 /**
- * Afficher les données dans un tableau
+ * Afficher les données municipales dans un tableau avec l'ordre correct des colonnes
  */
 function displayDataInTable(table, data) {
     const tbody = table.querySelector('tbody');
@@ -573,7 +573,7 @@ function displayDataInTable(table, data) {
     if (data.length === 0) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 10;
+        cell.colSpan = 6;
         cell.className = 'text-center text-muted';
         cell.textContent = 'Aucune donnée disponible';
         row.appendChild(cell);
@@ -581,13 +581,16 @@ function displayDataInTable(table, data) {
         return;
     }
     
+    // Ordre des colonnes pour les données municipales
+    const columnOrder = ['adresse', 'lot', 'reference', 'avis_decontamination', 'bureau_publicite', 'commentaires'];
+    
     data.forEach(item => {
         const row = document.createElement('tr');
         
-        // Obtenir les valeurs de l'objet (s'adapte aux différentes structures)
-        Object.values(item).forEach(value => {
+        // Afficher les colonnes dans l'ordre correct
+        columnOrder.forEach(columnName => {
             const cell = document.createElement('td');
-            cell.textContent = value || '';
+            cell.textContent = item[columnName] || '';
             row.appendChild(cell);
         });
         

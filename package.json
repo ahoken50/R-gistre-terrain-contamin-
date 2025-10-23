@@ -9,12 +9,18 @@
     "preview": "vite preview",
     "test": "node scripts/health-check.js"
   },
-  "keywords": ["terrains", "contaminés", "environnement", "gis"],
+  "keywords": [
+    "terrains",
+    "contaminés",
+    "environnement",
+    "gis"
+  ],
   "author": "Votre Entreprise",
   "license": "ISC",
   "type": "module",
   "dependencies": {
     "csv-parser": "^3.2.0",
+    "firebase": "^12.4.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "papaparse": "^5.5.3",

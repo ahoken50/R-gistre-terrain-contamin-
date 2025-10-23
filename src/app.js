@@ -1,6 +1,16 @@
 // Importer les bibliothèques nécessaires
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { 
+    loadMunicipalData as loadMunicipalDataFromFirebase,
+    saveMunicipalData as saveMunicipalDataToFirebase,
+    loadGovernmentData as loadGovernmentDataFromFirebase,
+    saveGovernmentData as saveGovernmentDataToFirebase,
+    loadValidations as loadValidationsFromFirebase,
+    saveValidations as saveValidationsToFirebase,
+    migrateFromLocalStorage,
+    cleanupLocalStorage
+} from './firebase.js';
 
 // Base URL pour les chemins (fonctionne en dev et prod avec GitHub Pages)
 const BASE_URL = import.meta.env.BASE_URL;
@@ -43,27 +53,23 @@ const exportPdfDecontaminatedBtn = document.getElementById('export-pdf-decontami
 const generateReportBtn = document.getElementById('generate-report');
 
 /**
- * Charger les données municipales depuis JSON
+ * Charger les données municipales depuis Firebase
  */
 async function loadMunicipalData() {
     try {
-        console.log('📊 Chargement des données municipales...');
+        console.log('📊 Chargement des données municipales depuis Firebase...');
         
-        // Vérifier d'abord si des données temporaires sont disponibles dans localStorage
-        const tempData = localStorage.getItem('temp_municipal_data');
-        if (tempData) {
-            console.log('🔄 Données temporaires trouvées dans localStorage');
-            const jsonData = JSON.parse(tempData);
-            municipalData = jsonData.data || jsonData;
-            console.log(`✅ ${municipalData.length} enregistrements municipaux chargés depuis localStorage`);
-            
-            // Afficher une notification pour informer l'utilisateur
-            showTempDataNotification();
-            
+        // Charger depuis Firebase
+        const firebaseData = await loadMunicipalDataFromFirebase();
+        
+        if (firebaseData && firebaseData.length > 0) {
+            municipalData = firebaseData;
+            console.log(`✅ ${municipalData.length} enregistrements municipaux chargés depuis Firebase`);
             return municipalData;
         }
         
-        // Sinon, charger depuis le fichier JSON
+        // Si pas de données dans Firebase, essayer de charger depuis JSON (fallback)
+        console.log('⚠️ Pas de données dans Firebase, tentative de chargement depuis JSON...');
         const response = await fetch(BASE_URL + 'data/municipal-data.json');
         
         if (!response.ok) {
@@ -71,15 +77,15 @@ async function loadMunicipalData() {
         }
         
         const jsonData = await response.json();
-        municipalData = jsonData.data || jsonData; // Support pour format avec ou sans metadata
+        municipalData = jsonData.data || jsonData;
         
-        // Sauvegarder dans localStorage pour persistance locale
-        localStorage.setItem('municipal_data_permanent', JSON.stringify({
-            data: municipalData,
-            lastUpdate: new Date().toISOString()
-        }));
+        // Sauvegarder dans Firebase pour la prochaine fois
+        if (municipalData.length > 0) {
+            await saveMunicipalDataToFirebase(municipalData);
+            console.log('✅ Données importées depuis JSON et sauvegardées dans Firebase');
+        }
         
-        console.log(`✅ ${municipalData.length} enregistrements municipaux chargés et sauvegardés`);
+        console.log(`✅ ${municipalData.length} enregistrements municipaux chargés`);
         return municipalData;
     } catch (error) {
         console.error('❌ Erreur lors du chargement des données municipales:', error);
@@ -125,7 +131,27 @@ function showTempDataNotification() {
  */
 async function loadGovernmentData() {
     try {
-        console.log('🏛️ Chargement des données gouvernementales...');
+        console.log('🏛️ Chargement des données gouvernementales depuis Firebase...');
+        
+        // Charger depuis Firebase
+        const firebaseData = await loadGovernmentDataFromFirebase();
+        
+        if (firebaseData && firebaseData.length > 0) {
+            governmentData = firebaseData;
+            console.log(`✅ ${governmentData.length} enregistrements gouvernementaux chargés depuis Firebase`);
+            
+            // Mettre à jour la date de dernière mise à jour
+            if (lastUpdateElement) {
+                const updateDate = new Date();
+                lastUpdateElement.textContent = updateDate.toLocaleDateString('fr-CA') + ' à ' + 
+                                                updateDate.toLocaleTimeString('fr-CA');
+            }
+            
+            return governmentData;
+        }
+        
+        // Si pas de données dans Firebase, essayer de charger depuis JSON (fallback)
+        console.log('⚠️ Pas de données dans Firebase, tentative de chargement depuis JSON...');
         const response = await fetch(BASE_URL + 'data/government-data.json');
         
         if (!response.ok) {
@@ -133,15 +159,6 @@ async function loadGovernmentData() {
         }
         
         const jsonData = await response.json();
-        
-        // Debug : afficher la structure des données
-        console.log('📦 Structure des données reçues:', {
-            hasData: !!jsonData.data,
-            isArray: Array.isArray(jsonData.data),
-            dataLength: jsonData.data ? jsonData.data.length : 'N/A',
-            metadata: jsonData.metadata
-        });
-        
         governmentData = jsonData.data || jsonData;
         
         // S'assurer que governmentData est un tableau
@@ -150,13 +167,21 @@ async function loadGovernmentData() {
             governmentData = [];
         }
         
+        // Sauvegarder dans Firebase pour la prochaine fois
+        if (governmentData.length > 0) {
+            await saveGovernmentDataToFirebase(governmentData);
+            console.log('✅ Données importées depuis JSON et sauvegardées dans Firebase');
+        }
+        
         console.log(`✅ ${governmentData.length} enregistrements gouvernementaux chargés`);
         
         // Mettre à jour la date de dernière mise à jour si disponible
         if (jsonData.metadata && jsonData.metadata.last_update) {
             const updateDate = new Date(jsonData.metadata.last_update);
-            lastUpdateElement.textContent = updateDate.toLocaleDateString('fr-CA') + ' à ' + 
-                                            updateDate.toLocaleTimeString('fr-CA');
+            if (lastUpdateElement) {
+                lastUpdateElement.textContent = updateDate.toLocaleDateString('fr-CA') + ' à ' + 
+                                                updateDate.toLocaleTimeString('fr-CA');
+            }
         }
         
         return governmentData;
@@ -168,7 +193,7 @@ async function loadGovernmentData() {
                 Adresse: "Aucune donnée gouvernementale chargée",
                 Ville: "Val-d'Or",
                 MRC: "N/A",
-                commentaires: "Exécutez automate_registre_valdor.py puis convert_excel_to_json.py"
+                commentaires: "Vérifiez la connexion Firebase"
             }
         ];
         return governmentData;
@@ -925,12 +950,13 @@ window.validateDecontamination = function(itemId) {
     validationsData.rejected = rejectedIds;
     validationsData.lastUpdate = new Date().toISOString();
     
-    // Sauvegarder aussi dans localStorage comme backup
-    localStorage.setItem('validated_decontaminated', JSON.stringify(validatedIds));
-    localStorage.setItem('rejected_decontaminated', JSON.stringify(rejectedIds));
-    
-    // Afficher un rappel pour exporter
-    showValidationReminder();
+    // Sauvegarder dans Firebase immédiatement
+    saveValidationsToFirebase(validationsData).then(() => {
+        console.log('✅ Validations sauvegardées automatiquement dans Firebase');
+    }).catch(error => {
+        console.error('❌ Erreur lors de la sauvegarde Firebase:', error);
+        showNotification('⚠️ Erreur de sauvegarde. Vérifiez votre connexion.', 'warning');
+    });
     
     // Rafraîchir l'affichage
     compareAndCategorizeData();
@@ -968,9 +994,18 @@ window.rejectDecontamination = function(itemId) {
         validatedIds.splice(validatedIndex, 1);
     }
     
-    // Sauvegarder
-    localStorage.setItem('validated_decontaminated', JSON.stringify(validatedIds));
-    localStorage.setItem('rejected_decontaminated', JSON.stringify(rejectedIds));
+    // Sauvegarder dans validationsData
+    validationsData.validated = validatedIds;
+    validationsData.rejected = rejectedIds;
+    validationsData.lastUpdate = new Date().toISOString();
+    
+    // Sauvegarder dans Firebase immédiatement
+    saveValidationsToFirebase(validationsData).then(() => {
+        console.log('✅ Rejet sauvegardé automatiquement dans Firebase');
+    }).catch(error => {
+        console.error('❌ Erreur lors de la sauvegarde Firebase:', error);
+        showNotification('⚠️ Erreur de sauvegarde. Vérifiez votre connexion.', 'warning');
+    });
     
     // Rafraîchir l'affichage
     compareAndCategorizeData();
@@ -1550,26 +1585,12 @@ async function generateAccessReport() {
  */
 async function loadValidations() {
     try {
-        const response = await fetch(BASE_URL + 'data/decontaminated-validations.json');
-        if (response.ok) {
-            validationsData = await response.json();
-            console.log('✅ Validations chargées:', validationsData.validated.length, 'validés,', validationsData.rejected.length, 'rejetés');
-        } else {
-            console.warn('⚠️ Fichier de validations non trouvé, utilisation des données vides');
-        }
+        console.log('📥 Chargement des validations depuis Firebase...');
+        validationsData = await loadValidationsFromFirebase();
+        console.log('✅ Validations chargées depuis Firebase:', validationsData.validated.length, 'validés,', validationsData.rejected.length, 'rejetés');
     } catch (error) {
-        console.warn('⚠️ Erreur lors du chargement des validations:', error);
-    }
-    
-    // Merger avec localStorage si présent (compatibilité)
-    const localValidated = JSON.parse(localStorage.getItem('validated_decontaminated') || '[]');
-    const localRejected = JSON.parse(localStorage.getItem('rejected_decontaminated') || '[]');
-    
-    if (localValidated.length > 0 || localRejected.length > 0) {
-        console.log('🔄 Fusion avec localStorage:', localValidated.length, 'validés,', localRejected.length, 'rejetés');
-        // Merger sans doublons
-        validationsData.validated = [...new Set([...validationsData.validated, ...localValidated])];
-        validationsData.rejected = [...new Set([...validationsData.rejected, ...localRejected])];
+        console.error('❌ Erreur lors du chargement des validations:', error);
+        validationsData = { validated: [], rejected: [], lastUpdate: null };
     }
 }
 
@@ -1622,34 +1643,9 @@ window.exportMunicipalData = function() {
  * Afficher un rappel pour exporter les validations
  */
 function showValidationReminder() {
-    // Vérifier si on doit afficher le rappel (pas plus d'une fois par minute)
-    const lastReminder = localStorage.getItem('last_validation_reminder');
-    const now = Date.now();
-    
-    if (!lastReminder || (now - parseInt(lastReminder)) > 60000) {
-        localStorage.setItem('last_validation_reminder', now.toString());
-        
-        // Créer une notification avec bouton d'export
-        const notification = document.createElement('div');
-        notification.className = 'alert alert-warning alert-dismissible fade show position-fixed';
-        notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; max-width: 400px;';
-        notification.innerHTML = `
-            <strong>💾 Validations modifiées</strong><br>
-            N'oubliez pas d'exporter vos validations pour les partager avec vos collègues !
-            <button type="button" class="btn btn-sm btn-primary mt-2" onclick="exportValidations()">
-                📥 Exporter maintenant
-            </button>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(notification);
-        
-        // Auto-supprimer après 10 secondes
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
-        }, 10000);
-    }
+    // Cette fonction n'est plus nécessaire - Firebase sauvegarde automatiquement
+    // Gardée pour compatibilité avec les anciens appels
+    console.log('✅ Sauvegarde automatique Firebase activée');
 }
 
 /**
@@ -1662,7 +1658,26 @@ async function initializeApp() {
     lastUpdateElement.textContent = 'Chargement en cours...';
     
     try {
-        // Charger les données
+        // Vérifier si la migration localStorage → Firebase a été faite
+        const migrationDone = localStorage.getItem('firebase_migration_done');
+        if (!migrationDone) {
+            console.log('🔄 Première utilisation de Firebase - Migration des données localStorage...');
+            try {
+                const migrated = await migrateFromLocalStorage();
+                if (migrated) {
+                    showNotification('✅ Vos données locales ont été migrées vers Firebase!', 'success');
+                    // Nettoyer localStorage après migration réussie
+                    setTimeout(() => {
+                        cleanupLocalStorage();
+                    }, 2000);
+                }
+            } catch (migrationError) {
+                console.error('⚠️ Erreur lors de la migration:', migrationError);
+                showNotification('⚠️ Migration partielle - certaines données pourraient ne pas avoir été transférées', 'warning');
+            }
+        }
+        
+        // Charger les données depuis Firebase
         await loadValidations();  // Charger d'abord les validations
         await loadMunicipalData();
         await loadGovernmentData();

@@ -523,10 +523,9 @@ function updateStatistics() {
         pending: pendingDecontaminatedData.length
     });
     
-    statsMunicipal.textContent = municipalData.length;
-    statsGovernment.textContent = governmentData.length;
-    statsNotOfficial.textContent = notInOfficialData.length;
-    statsDecontaminated.textContent = decontaminatedData.length;
+    if (statsMunicipal) statsMunicipal.textContent = municipalData.length;
+    if (statsGovernment) statsGovernment.textContent = governmentData.length;
+    if (statsDecontaminated) statsDecontaminated.textContent = decontaminatedData.length;
     
     // Afficher le badge de notification pour les terrains en attente
     if (statsPendingDecontaminated) {

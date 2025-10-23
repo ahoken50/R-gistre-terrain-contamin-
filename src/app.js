@@ -8,7 +8,6 @@ const BASE_URL = import.meta.env.BASE_URL;
 // Variables globales pour stocker les données
 let municipalData = [];
 let governmentData = [];
-let notInOfficialData = [];
 let decontaminatedData = [];
 let pendingDecontaminatedData = []; // Terrains en attente de validation
 let validationsData = { validated: [], rejected: [], lastUpdate: null }; // Validations permanentes
@@ -16,13 +15,11 @@ let validationsData = { validated: [], rejected: [], lastUpdate: null }; // Vali
 // Références aux éléments DOM
 const municipalTable = document.getElementById('municipal-table');
 const governmentTable = document.getElementById('government-table');
-const notInOfficialTable = document.getElementById('not-in-official-table');
 const decontaminatedTable = document.getElementById('decontaminated-table');
 
 // Références aux éléments de statistiques
 const statsMunicipal = document.getElementById('stats-municipal');
 const statsGovernment = document.getElementById('stats-government');
-const statsNotOfficial = document.getElementById('stats-not-official');
 const statsDecontaminated = document.getElementById('stats-decontaminated');
 const statsPendingDecontaminated = document.getElementById('stats-pending-decontaminated');
 const lastUpdateElement = document.getElementById('last-update');
@@ -42,7 +39,6 @@ const governmentReferenceFilter = document.getElementById('government-reference-
 // Références aux boutons d'export
 const exportPdfMunicipalBtn = document.getElementById('export-pdf-municipal');
 const exportPdfGovernmentBtn = document.getElementById('export-pdf-government');
-const exportPdfNotInOfficialBtn = document.getElementById('export-pdf-not-in-official');
 const exportPdfDecontaminatedBtn = document.getElementById('export-pdf-decontaminated');
 const generateReportBtn = document.getElementById('generate-report');
 
@@ -77,7 +73,13 @@ async function loadMunicipalData() {
         const jsonData = await response.json();
         municipalData = jsonData.data || jsonData; // Support pour format avec ou sans metadata
         
-        console.log(`✅ ${municipalData.length} enregistrements municipaux chargés`);
+        // Sauvegarder dans localStorage pour persistance locale
+        localStorage.setItem('municipal_data_permanent', JSON.stringify({
+            data: municipalData,
+            lastUpdate: new Date().toISOString()
+        }));
+        
+        console.log(`✅ ${municipalData.length} enregistrements municipaux chargés et sauvegardés`);
         return municipalData;
     } catch (error) {
         console.error('❌ Erreur lors du chargement des données municipales:', error);
@@ -557,7 +559,6 @@ function updateStatistics() {
     console.log('📊 Mise à jour des statistiques:', {
         municipal: municipalData.length,
         government: governmentData.length,
-        notOfficial: notInOfficialData.length,
         decontaminated: decontaminatedData.length,
         pending: pendingDecontaminatedData.length
     });
@@ -1622,6 +1623,32 @@ window.exportValidations = function() {
     URL.revokeObjectURL(url);
     
     showNotification('✅ Fichier de validations téléchargé ! Placez-le dans public/data/ pour le partager avec vos collègues.', 'success');
+}
+
+/**
+ * Exporter les données municipales en JSON pour sauvegarde permanente
+ */
+window.exportMunicipalData = function() {
+    const dataToExport = {
+        data: municipalData,
+        lastUpdate: new Date().toISOString(),
+        source: "Ville de Val-d'Or",
+        count: municipalData.length
+    };
+    
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'municipal-data.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification('✅ Données municipales exportées ! Envoyez ce fichier à votre administrateur pour le déployer dans public/data/', 'success');
 }
 
 /**

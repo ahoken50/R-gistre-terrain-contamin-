@@ -227,52 +227,12 @@ function compareAndCategorizeData() {
     console.log(`📋 Total références gouvernementales: ${officialReferences.size}`);
     console.log('📋 Échantillon adresses gouvernementales:', officialAddresses.slice(0, 3));
     
-    // Identifier les terrains non présents dans le registre officiel (par SIMILARITÉ D'ADRESSE)
-    let countInRegistry = 0;
-    
-    notInOfficialData = municipalData.filter((item, index) => {
-        const municipalAddress = getColumnValue(item, 'adresse', 'address', 'ADRESSE') || '';
-        
-        if (!municipalAddress) {
-            return true; // Pas d'adresse = non officiel
-        }
-        
-        // Vérifier si l'adresse municipale est similaire à une adresse gouvernementale
-        let isInOfficialRegistry = false;
-        for (const govAddress of officialAddresses) {
-            if (addressesAreSimilar(municipalAddress, govAddress)) {
-                isInOfficialRegistry = true;
-                break;
-            }
-        }
-        
-        if (isInOfficialRegistry) {
-            countInRegistry++;
-        }
-        
-        // DEBUG: Log premiers terrains
-        if (index < 5) {
-            const core = getAddressCore(municipalAddress);
-            console.log(`🔍 Terrain ${index} [${municipalAddress}]:`);
-            console.log(`   Core: "${core}"`);
-            console.log(`   Dans registre: ${isInOfficialRegistry}`);
-        }
-        
-        return !isInOfficialRegistry;
-    });
-    
-    console.log(`📊 Résumé terrains municipaux:`);
-    console.log(`  - Total: ${municipalData.length}`);
-    console.log(`  - Trouvés dans registre gouv (par adresse): ${countInRegistry}`);
-    console.log(`  - Non officiels: ${notInOfficialData.length}`);
-    
     // Identifier automatiquement les terrains potentiellement décontaminés
     identifyDecontaminatedLands(officialReferences);
     
     console.log(`📋 Catégorisation terminée :`);
     console.log(`  - Terrains municipaux: ${municipalData.length}`);
     console.log(`  - Terrains gouvernementaux: ${governmentData.length}`);
-    console.log(`  - Terrains non officiels: ${notInOfficialData.length}`);
     console.log(`  - Terrains décontaminés validés: ${decontaminatedData.length}`);
     console.log(`  - Terrains en attente de validation: ${pendingDecontaminatedData.length}`);
 }

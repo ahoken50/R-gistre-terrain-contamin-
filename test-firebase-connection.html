@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Connexion Firebase</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+        }
+        .test-section.success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .test-section.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .test-section.pending {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        .log-output {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .log-entry.success {
+            color: #28a745;
+        }
+        .log-entry.error {
+            color: #dc3545;
+        }
+        .log-entry.info {
+            color: #0dcaf0;
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">🔥 Test de Connexion Firebase</h1>
+        <p class="text-center text-muted">Diagnostic complet de la configuration Firebase</p>
+        
+        <hr>
+        
+        <!-- Test 1: Connexion Firebase -->
+        <div class="test-section pending" id="test1">
+            <h4>1️⃣ Test de Connexion Firebase</h4>
+            <p>Vérification de l'initialisation de Firebase...</p>
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+        
+        <!-- Test 2: Lecture des Données Municipales -->
+        <div class="test-section pending" id="test2">
+            <h4>2️⃣ Test de Lecture - Données Municipales</h4>
+            <p>Tentative de lecture de la collection 'municipal_data'...</p>
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+        
+        <!-- Test 3: Lecture des Données Gouvernementales -->
+        <div class="test-section pending" id="test3">
+            <h4>3️⃣ Test de Lecture - Données Gouvernementales</h4>
+            <p>Tentative de lecture de la collection 'government_data'...</p>
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+        
+        <!-- Test 4: Lecture des Validations -->
+        <div class="test-section pending" id="test4">
+            <h4>4️⃣ Test de Lecture - Validations</h4>
+            <p>Tentative de lecture de la collection 'validations'...</p>
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+        
+        <!-- Test 5: Test d'Écriture -->
+        <div class="test-section pending" id="test5">
+            <h4>5️⃣ Test d'Écriture</h4>
+            <p>Tentative d'écriture d'un document de test...</p>
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+        
+        <!-- Console de Logs -->
+        <div class="mt-4">
+            <h4>📋 Console de Logs</h4>
+            <div class="log-output" id="logOutput"></div>
+        </div>
+        
+        <!-- Boutons d'Action -->
+        <div class="text-center mt-4">
+            <button class="btn btn-primary" onclick="location.reload()">🔄 Relancer les Tests</button>
+            <a href="upload-data.html" class="btn btn-success">📤 Aller à la Page de Chargement</a>
+            <a href="index.html" class="btn btn-secondary">🏠 Retour à l'Application</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, collection } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXkuOEHJ8RFz4st6ilEtxGWk5UtuWn8Gk",
+            authDomain: "r-gistre-terrain-contamin.firebaseapp.com",
+            projectId: "r-gistre-terrain-contamin",
+            storageBucket: "r-gistre-terrain-contamin.firebasestorage.app",
+            messagingSenderId: "501248384607",
+            appId: "1:501248384607:web:6199f69d20a194639a45ea",
+            measurementId: "G-5B5GYK1SHF"
+        };
+
+        const logOutput = document.getElementById('logOutput');
+        
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logOutput.appendChild(entry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+
+        function updateTestStatus(testId, status, message) {
+            const testSection = document.getElementById(testId);
+            testSection.className = `test-section ${status}`;
+            
+            const spinner = testSection.querySelector('.spinner-border');
+            if (spinner) spinner.remove();
+            
+            const p = testSection.querySelector('p');
+            p.innerHTML = message;
+        }
+
+        async function runTests() {
+            log('🚀 Démarrage des tests Firebase...', 'info');
+            
+            // Test 1: Connexion Firebase
+            try {
+                log('Test 1: Initialisation de Firebase...', 'info');
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                log('✅ Firebase initialisé avec succès', 'success');
+                updateTestStatus('test1', 'success', '✅ Firebase connecté avec succès!');
+                
+                // Test 2: Lecture Données Municipales
+                try {
+                    log('Test 2: Lecture des données municipales...', 'info');
+                    const municipalRef = doc(db, 'municipal_data', 'current');
+                    const municipalSnap = await getDoc(municipalRef);
+                    
+                    if (municipalSnap.exists()) {
+                        const data = municipalSnap.data();
+                        log(`✅ Données municipales trouvées: ${data.count || 0} enregistrements`, 'success');
+                        updateTestStatus('test2', 'success', 
+                            `✅ Données municipales chargées<br>
+                            <strong>Enregistrements:</strong> ${data.count || 0}<br>
+                            <strong>Dernière mise à jour:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString('fr-CA') : 'N/A'}`
+                        );
+                    } else {
+                        log('⚠️ Aucune donnée municipale trouvée dans Firebase', 'error');
+                        updateTestStatus('test2', 'error', 
+                            '⚠️ Aucune donnée municipale dans Firebase<br>Utilisez la page de chargement pour ajouter des données.'
+                        );
+                    }
+                } catch (error) {
+                    log(`❌ Erreur lecture données municipales: ${error.message}`, 'error');
+                    updateTestStatus('test2', 'error', `❌ Erreur: ${error.message}`);
+                }
+                
+                // Test 3: Lecture Données Gouvernementales
+                try {
+                    log('Test 3: Lecture des données gouvernementales...', 'info');
+                    const govRef = doc(db, 'government_data', 'current');
+                    const govSnap = await getDoc(govRef);
+                    
+                    if (govSnap.exists()) {
+                        const data = govSnap.data();
+                        log(`✅ Données gouvernementales trouvées: ${data.count || 0} enregistrements`, 'success');
+                        updateTestStatus('test3', 'success', 
+                            `✅ Données gouvernementales chargées<br>
+                            <strong>Enregistrements:</strong> ${data.count || 0}<br>
+                            <strong>Dernière mise à jour:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString('fr-CA') : 'N/A'}`
+                        );
+                    } else {
+                        log('⚠️ Aucune donnée gouvernementale trouvée dans Firebase', 'error');
+                        updateTestStatus('test3', 'error', 
+                            '⚠️ Aucune donnée gouvernementale dans Firebase<br>Les données seront chargées depuis le fichier JSON.'
+                        );
+                    }
+                } catch (error) {
+                    log(`❌ Erreur lecture données gouvernementales: ${error.message}`, 'error');
+                    updateTestStatus('test3', 'error', `❌ Erreur: ${error.message}`);
+                }
+                
+                // Test 4: Lecture Validations
+                try {
+                    log('Test 4: Lecture des validations...', 'info');
+                    const validRef = doc(db, 'validations', 'current');
+                    const validSnap = await getDoc(validRef);
+                    
+                    if (validSnap.exists()) {
+                        const data = validSnap.data();
+                        log(`✅ Validations trouvées: ${data.validated?.length || 0} validés, ${data.rejected?.length || 0} rejetés`, 'success');
+                        updateTestStatus('test4', 'success', 
+                            `✅ Validations chargées<br>
+                            <strong>Validés:</strong> ${data.validated?.length || 0}<br>
+                            <strong>Rejetés:</strong> ${data.rejected?.length || 0}<br>
+                            <strong>Dernière mise à jour:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString('fr-CA') : 'N/A'}`
+                        );
+                    } else {
+                        log('⚠️ Aucune validation trouvée dans Firebase', 'error');
+                        updateTestStatus('test4', 'error', 
+                            '⚠️ Aucune validation dans Firebase<br>Les validations seront créées lors de l\'utilisation de l\'application.'
+                        );
+                    }
+                } catch (error) {
+                    log(`❌ Erreur lecture validations: ${error.message}`, 'error');
+                    updateTestStatus('test4', 'error', `❌ Erreur: ${error.message}`);
+                }
+                
+                // Test 5: Test d'Écriture
+                try {
+                    log('Test 5: Test d\'écriture...', 'info');
+                    const testRef = doc(db, 'test_connection', 'test_doc');
+                    await setDoc(testRef, {
+                        timestamp: new Date().toISOString(),
+                        message: 'Test de connexion réussi',
+                        test: true
+                    });
+                    log('✅ Écriture réussie dans Firebase', 'success');
+                    updateTestStatus('test5', 'success', 
+                        '✅ Test d\'écriture réussi<br>Les permissions Firebase sont correctement configurées.'
+                    );
+                } catch (error) {
+                    log(`❌ Erreur écriture: ${error.message}`, 'error');
+                    updateTestStatus('test5', 'error', 
+                        `❌ Erreur d'écriture: ${error.message}<br>
+                        Vérifiez les règles de sécurité Firestore.`
+                    );
+                }
+                
+                log('🎉 Tests terminés!', 'success');
+                
+            } catch (error) {
+                log(`❌ Erreur critique: ${error.message}`, 'error');
+                updateTestStatus('test1', 'error', `❌ Erreur de connexion: ${error.message}`);
+            }
+        }
+
+        // Lancer les tests au chargement de la page
+        runTests();
+    </script>
+</body>
+</html>

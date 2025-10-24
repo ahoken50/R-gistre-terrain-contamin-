@@ -33,7 +33,8 @@ const COLLECTIONS = {
   MUNICIPAL_DATA: 'municipal_data',
   GOVERNMENT_DATA: 'government_data',
   VALIDATIONS: 'validations',
-  APP_STATE: 'app_state'
+  APP_STATE: 'app_state',
+  SYNC_METADATA: 'sync_metadata'
 };
 
 /**
@@ -224,6 +225,48 @@ export function cleanupLocalStorage() {
   localStorage.removeItem('validated_decontaminated');
   localStorage.removeItem('rejected_decontaminated');
   console.log('✅ localStorage nettoyé');
+}
+
+/**
+ * Sauvegarder les métadonnées de synchronisation
+ */
+export async function saveSyncMetadata(metadata) {
+  try {
+    console.log('💾 Sauvegarde des métadonnées de synchronisation dans Firebase...');
+    const docRef = doc(db, COLLECTIONS.SYNC_METADATA, 'current');
+    await setDoc(docRef, {
+      ...metadata,
+      lastUpdate: new Date().toISOString()
+    });
+    console.log('✅ Métadonnées de synchronisation sauvegardées dans Firebase');
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde métadonnées Firebase:', error);
+    throw error;
+  }
+}
+
+/**
+ * Charger les métadonnées de synchronisation
+ */
+export async function loadSyncMetadata() {
+  try {
+    console.log('📥 Chargement des métadonnées de synchronisation depuis Firebase...');
+    const docRef = doc(db, COLLECTIONS.SYNC_METADATA, 'current');
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const result = docSnap.data();
+      console.log('✅ Métadonnées de synchronisation chargées depuis Firebase');
+      return result;
+    } else {
+      console.log('⚠️ Aucune métadonnée de synchronisation dans Firebase');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Erreur chargement métadonnées Firebase:', error);
+    return null;
+  }
 }
 
 export { db, COLLECTIONS };

@@ -8,8 +8,6 @@ import {
     saveGovernmentData as saveGovernmentDataToFirebase,
     loadValidations as loadValidationsFromFirebase,
     saveValidations as saveValidationsToFirebase,
-    saveSyncMetadata,
-    loadSyncMetadata,
     migrateFromLocalStorage,
     cleanupLocalStorage
 } from './firebase.js';
@@ -1285,191 +1283,64 @@ function filterDecontaminatedData() {
  * Synchroniser les données gouvernementales
  * Recharge les données depuis le serveur et recatégorise tout
  */
-/**
-    * Détecter les changements entre deux ensembles de données
-    */
-   function detectChanges(oldData, newData) {
-       // Créer des maps pour une recherche rapide
-       const oldMap = new Map(oldData.map(item => [item.NO_MEF_LIEU, item]));
-       const newMap = new Map(newData.map(item => [item.NO_MEF_LIEU, item]));
-       
-       // Identifier les nouveaux éléments
-       const newItems = newData.filter(item => !oldMap.has(item.NO_MEF_LIEU));
-       
-       // Identifier les éléments retirés
-       const removedItems = oldData.filter(item => !newMap.has(item.NO_MEF_LIEU));
-       
-       // Identifier les éléments modifiés
-       const modifiedItems = newData.filter(item => {
-           if (!oldMap.has(item.NO_MEF_LIEU)) return false;
-           const oldItem = oldMap.get(item.NO_MEF_LIEU);
-           // Comparer les objets en JSON pour détecter les modifications
-           return JSON.stringify(oldItem) !== JSON.stringify(item);
-       });
-       
-       console.log('📊 Changements détectés:', {
-           nouveaux: newItems.length,
-           modifiés: modifiedItems.length,
-           retirés: removedItems.length
-       });
-       
-       return {
-           new: newItems,
-           modified: modifiedItems,
-           removed: removedItems
-       };
-   }
-
-   /**
-    * Vérifier si une mise à jour est nouvelle
-    */
-   function isNewUpdate(lastCheckDate, syncDate) {
-       if (!lastCheckDate || !syncDate) return false;
-       
-       const lastCheck = new Date(lastCheckDate);
-       const sync = new Date(syncDate);
-       
-       return sync > lastCheck;
-   }
-
-   /**
-    * Vérifier les mises à jour au chargement de l'application
-    */
-   async function checkForUpdates() {
-       try {
-           console.log('🔍 Vérification des mises à jour...');
-           
-           // Charger les métadonnées de synchronisation depuis Firebase d'abord
-           let syncMetadata = await loadSyncMetadata();
-           
-           // Si pas dans Firebase, essayer localStorage
-           if (!syncMetadata) {
-               const syncMetadataStr = localStorage.getItem('sync_metadata');
-               if (!syncMetadataStr) {
-                   console.log('ℹ️ Aucune métadonnée de synchronisation trouvée');
-                   return;
-               }
-               syncMetadata = JSON.parse(syncMetadataStr);
-           }
-           const lastCheck = localStorage.getItem('last_update_check');
-           
-           // Vérifier si c'est une nouvelle mise à jour
-           if (!lastCheck || isNewUpdate(lastCheck, syncMetadata.last_sync_date)) {
-               console.log('🆕 Nouvelle mise à jour détectée!');
-               
-               // Afficher la notification de mise à jour
-               showUpdateNotification({
-                   newCount: syncMetadata.changes?.new || 0,
-                   modifiedCount: syncMetadata.changes?.modified || 0,
-                   removedCount: syncMetadata.changes?.removed || 0,
-                   lastUpdate: syncMetadata.last_sync_date
-               });
-               
-               // Enregistrer la date de vérification
-               localStorage.setItem('last_update_check', syncMetadata.last_sync_date);
-           } else {
-               console.log('✅ Aucune nouvelle mise à jour');
-           }
-       } catch (error) {
-           console.error('❌ Erreur lors de la vérification des mises à jour:', error);
-       }
-   }
-
-   async function synchronizeGovernmentData() {
-       console.log('🔄 Synchronisation des données gouvernementales...');
-       
-       // Afficher un indicateur de chargement
-       if (syncGovernmentBtn) {
-           syncGovernmentBtn.disabled = true;
-           syncGovernmentBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Synchronisation...';
-       }
-       
-       try {
-           // 1. Sauvegarder les données actuelles pour comparaison
-           const oldData = [...governmentData];
-           
-           // 2. Charger les nouvelles données depuis Firebase
-           console.log('📥 Chargement des nouvelles données depuis Firebase...');
-           const newData = await loadGovernmentDataFromFirebase();
-           
-           if (!newData || newData.length === 0) {
-               throw new Error('Aucune donnée reçue de Firebase');
-           }
-           
-           console.log(`✅ ${newData.length} enregistrements gouvernementaux chargés`);
-           
-           // 3. Détecter les changements
-           const changes = detectChanges(oldData, newData);
-           
-           // 4. Mettre à jour les données globales
-           governmentData = newData;
-           
-           // 5. Sauvegarder dans Firebase avec métadonnées de synchronisation
-           await saveGovernmentDataToFirebase(governmentData);
-           
-           // 6. Sauvegarder les métadonnées de synchronisation
-           const syncMetadata = {
-               last_sync_date: new Date().toISOString(),
-               last_sync_status: 'success',
-               changes: {
-                   new: changes.new.length,
-                   modified: changes.modified.length,
-                   removed: changes.removed.length
-               },
-               total_records: governmentData.length
-           };
-           
-           // Sauvegarder les métadonnées dans localStorage pour accès rapide
-           localStorage.setItem('sync_metadata', JSON.stringify(syncMetadata));
-           
-           // Sauvegarder également dans Firebase
-           try {
-               await saveSyncMetadata(syncMetadata);
-           } catch (metadataError) {
-               console.error('⚠️ Erreur sauvegarde métadonnées Firebase:', metadataError);
-           }
-           
-           // 7. Mettre à jour la date d'affichage
-           if (lastUpdateElement) {
-               const updateDate = new Date(syncMetadata.last_sync_date);
-               lastUpdateElement.textContent = updateDate.toLocaleDateString('fr-CA') + ' à ' + 
-                                               updateDate.toLocaleTimeString('fr-CA');
-           }
-           
-           // 8. Recatégoriser toutes les données
-           compareAndCategorizeData();
-           updateStatistics();
-           
-           // 9. Rafraîchir tous les affichages
-           displayGovernmentData(governmentTable, governmentData);
-           displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
-           
-           // Mettre à jour le compteur
-           const countElement = document.getElementById('decontaminated-filtered-count');
-           if (countElement) {
-               countElement.textContent = decontaminatedData.length;
-           }
-           displayPendingDecontaminatedData();
-           
-           // 10. Afficher la notification détaillée
-           showUpdateNotification({
-               newCount: changes.new.length,
-               modifiedCount: changes.modified.length,
-               removedCount: changes.removed.length,
-               lastUpdate: syncMetadata.last_sync_date
-           });
-           
-       } catch (error) {
-           console.error('❌ Erreur lors de la synchronisation:', error);
-           showNotification('Erreur lors de la synchronisation des données: ' + error.message, 'danger');
-       } finally {
-           // Restaurer le bouton
-           if (syncGovernmentBtn) {
-               syncGovernmentBtn.disabled = false;
-               syncGovernmentBtn.innerHTML = '🔄 Synchroniser les données';
-           }
-       }
-   }
+async function synchronizeGovernmentData() {
+    console.log('🔄 Synchronisation des données gouvernementales...');
+    
+    // Afficher un indicateur de chargement
+    if (syncGovernmentBtn) {
+        syncGovernmentBtn.disabled = true;
+        syncGovernmentBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Synchronisation...';
+    }
+    
+    try {
+        // Forcer le rechargement en ajoutant un timestamp pour éviter le cache
+        const timestamp = new Date().getTime();
+        const response = await fetch(BASE_URL + `data/government-data.json?t=${timestamp}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const jsonData = await response.json();
+        governmentData = jsonData.data || jsonData;
+        
+        console.log(`✅ ${governmentData.length} enregistrements gouvernementaux rechargés`);
+        
+        // Mettre à jour la date
+        if (jsonData.metadata && jsonData.metadata.last_update) {
+            const updateDate = new Date(jsonData.metadata.last_update);
+            lastUpdateElement.textContent = updateDate.toLocaleDateString('fr-CA') + ' à ' + 
+                                            updateDate.toLocaleTimeString('fr-CA');
+        }
+        
+        // Recatégoriser toutes les données
+        compareAndCategorizeData();
+        updateStatistics();
+        
+        // Rafraîchir tous les affichages
+        displayGovernmentData(governmentTable, governmentData);
+        displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+    
+    // Mettre à jour le compteur
+    const countElement = document.getElementById('decontaminated-filtered-count');
+    if (countElement) {
+        countElement.textContent = decontaminatedData.length;
+    }
+        displayPendingDecontaminatedData();
+        
+        showNotification('Données gouvernementales synchronisées avec succès!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la synchronisation:', error);
+        showNotification('Erreur lors de la synchronisation des données', 'danger');
+    } finally {
+        // Restaurer le bouton
+        if (syncGovernmentBtn) {
+            syncGovernmentBtn.disabled = false;
+            syncGovernmentBtn.innerHTML = '🔄 Synchroniser les données';
+        }
+    }
+}
 
 /**
  * Calculer les statistiques annuelles de décontamination (Phase 2)
@@ -1982,9 +1853,6 @@ async function initializeApp() {
         }
         
         console.log('✅ Application initialisée avec succès !');
-           
-           // Vérifier les mises à jour disponibles
-           await checkForUpdates();
         
     } catch (error) {
         console.error('❌ Erreur lors de l\'initialisation:', error);

@@ -1,0 +1,45 @@
+name: Synchronisation Mensuelle du Registre Gouvernemental
+
+on:
+  schedule:
+    # Exécuter le 1er de chaque mois à 2h00 AM (UTC)
+    - cron: '0 2 1 * *'
+  workflow_dispatch: # Permet l'exécution manuelle depuis l'interface GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
+      
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install geopandas requests firebase-admin pandas
+      
+      - name: Run synchronization script
+        env:
+          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+        run: |
+          python scripts/sync_government_data.py
+      
+      - name: Upload logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-logs
+          path: |
+            *.log
+          retention-days: 30

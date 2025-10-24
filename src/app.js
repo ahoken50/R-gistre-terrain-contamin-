@@ -389,20 +389,39 @@ function identifyDecontaminatedLands(officialReferences) {
     decontaminatedData = [];
     pendingDecontaminatedData = [];
     
-    // Créer une map des terrains gouvernementaux pour accès rapide
-    const govTerrainMap = new Map();
+    // Créer une map des terrains gouvernementaux pour accès rapide par référence
+    const govTerrainMapByRef = new Map();
+    const govTerrainMapByAddress = new Map();
+    
     governmentData.forEach(terrain => {
-        const ref = (terrain.NO_MEF_LIEU || terrain.reference || '').toLowerCase();
+        // Index par référence
+        const ref = (terrain.NO_MEF_LIEU || terrain.reference || '').toLowerCase().trim();
         if (ref) {
-            govTerrainMap.set(ref, terrain);
+            govTerrainMapByRef.set(ref, terrain);
+        }
+        
+        // Index par adresse normalisée pour cross-référence
+        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toLowerCase().trim();
+        if (address) {
+            const normalizedAddr = normalizeAddress(address);
+            if (!govTerrainMapByAddress.has(normalizedAddr)) {
+                govTerrainMapByAddress.set(normalizedAddr, []);
+            }
+            govTerrainMapByAddress.get(normalizedAddr).push(terrain);
         }
     });
+    
+    console.log('📋 Index créés:');
+    console.log(`  - Par référence: ${govTerrainMapByRef.size} entrées`);
+    console.log(`  - Par adresse: ${govTerrainMapByAddress.size} entrées`);
     
     // DIAGNOSTIC: Compter les terrains avec chaque critère
     let countWithNotice = 0;
     let countWithComment = 0;
     let countWithReference = 0;
     let countIsDecontaminatedInGov = 0;
+    let countMatchedByAddress = 0;
+    let countMatchedByReference = 0;
     
     municipalData.forEach((item, index) => {
         const itemId = `${item.adresse}_${item.lot}`;
@@ -453,7 +472,19 @@ function identifyDecontaminatedLands(officialReferences) {
         const referenceStr = reference ? String(reference).trim() : '';
         const hadReference = referenceStr !== '';
         if (hadReference) countWithReference++;
-        const govTerrain = hadReference ? govTerrainMap.get(referenceStr.toLowerCase()) : null;
+        let govTerrain = hadReference ? govTerrainMapByRef.get(referenceStr.toLowerCase()) : null;
+           if (govTerrain) countMatchedByReference++;
+           
+           // Si pas trouvé par référence, chercher par adresse
+           if (!govTerrain && item.adresse) {
+               const normalizedMunicipalAddr = normalizeAddress(item.adresse);
+               const matchingTerrains = govTerrainMapByAddress.get(normalizedMunicipalAddr);
+               if (matchingTerrains && matchingTerrains.length > 0) {
+                   govTerrain = matchingTerrains[0]; // Prendre le premier match
+                   countMatchedByAddress++;
+                   console.log(`🔗 Match par adresse: "${item.adresse}" → "${govTerrain.ADR_CIV_LIEU}"`);
+               }
+           }
         const isDecontaminatedInGov = govTerrain && govTerrain.IS_DECONTAMINATED === true;
         if (isDecontaminatedInGov) countIsDecontaminatedInGov++;
         
@@ -519,6 +550,10 @@ function identifyDecontaminatedLands(officialReferences) {
     console.log(`  - Terrains avec mention dans commentaires: ${countWithComment}`);
     console.log(`  - Terrains avec référence MENVIQ: ${countWithReference}`);
     console.log(`  - Terrains décontaminés dans registre gouv (IS_DECONTAMINATED=true): ${countIsDecontaminatedInGov}`);
+    console.log(`📊 Cross-références:`);
+    console.log(`  - Matchés par référence: ${countMatchedByReference}`);
+    console.log(`  - Matchés par adresse: ${countMatchedByAddress}`);
+    console.log(`  - Total matchés: ${countMatchedByReference + countMatchedByAddress}`);
     console.log(`✅ Détection terminée:`);
     console.log(`  - ${decontaminatedData.length} terrains décontaminés validés`);
     console.log(`  - ${pendingDecontaminatedData.length} terrains en attente de validation`);
@@ -851,6 +886,12 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
             statusBadge = '<span class="badge bg-secondary" title="Retiré du registre uniquement">⚪ Présumé</span>';
         }
         
+        // Ajouter l'information de cross-référence gouvernementale
+        let detectionCriteria = item._detection_criteria || '';
+        if (item._gov_etat_rehab) {
+            detectionCriteria += ` | 🔗 Gouv: ${item._gov_etat_rehab}`;
+        }
+        
         const decontaminationDate = avisDecontamination 
             ? formatDate(avisDecontamination)
             : 'Non spécifiée';
@@ -863,7 +904,7 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
             decontaminationDate,
             bureauPublicite,
             statusBadge,
-            item._detection_criteria || '',
+            detectionCriteria,
             commentaires
         ];
         

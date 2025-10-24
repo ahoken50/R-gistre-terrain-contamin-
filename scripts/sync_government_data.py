@@ -16,6 +16,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import tempfile
 import logging
+import zipfile
 
 # Configuration du logging
 logging.basicConfig(
@@ -56,34 +57,61 @@ def initialize_firebase():
         raise
 
 
-def download_gpkg(url):
-    """Télécharger le fichier GPKG"""
+def download_and_extract_gpkg(url):
+    """Télécharger et extraire le fichier GPKG depuis le ZIP"""
     try:
-        logger.info(f"📥 Téléchargement du fichier GPKG depuis {url}")
+        logger.info(f"📥 Téléchargement du fichier ZIP depuis {url}")
         
         response = requests.get(url, stream=True, timeout=300)
         response.raise_for_status()
         
-        # Créer un fichier temporaire
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.gpkg')
+        # Créer un fichier temporaire pour le ZIP
+        temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
         
         # Télécharger avec barre de progression
         total_size = int(response.headers.get('content-length', 0))
         downloaded = 0
         
-        with open(temp_file.name, 'wb') as f:
+        with open(temp_zip.name, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
                     if total_size > 0:
                         progress = (downloaded / total_size) * 100
-                        logger.info(f"Téléchargement: {progress:.1f}%")
+                        if downloaded % (1024 * 1024) == 0:  # Log every MB
+                            logger.info(f"Téléchargement: {progress:.1f}%")
         
-        logger.info(f"✅ Fichier téléchargé: {temp_file.name}")
-        return temp_file.name
+        logger.info(f"✅ Fichier ZIP téléchargé: {temp_zip.name}")
+        
+        # Extraire le ZIP
+        logger.info("📦 Extraction du fichier ZIP...")
+        temp_dir = tempfile.mkdtemp()
+        
+        with zipfile.ZipFile(temp_zip.name, 'r') as zip_ref:
+            zip_ref.extractall(temp_dir)
+        
+        # Trouver le fichier GPKG dans le répertoire extrait
+        gpkg_file = None
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                if file.endswith('.gpkg'):
+                    gpkg_file = os.path.join(root, file)
+                    break
+            if gpkg_file:
+                break
+        
+        if not gpkg_file:
+            raise FileNotFoundError("Aucun fichier .gpkg trouvé dans l'archive ZIP")
+        
+        logger.info(f"✅ Fichier GPKG extrait: {gpkg_file}")
+        
+        # Nettoyer le fichier ZIP
+        os.remove(temp_zip.name)
+        
+        return gpkg_file, temp_dir
     except Exception as e:
-        logger.error(f"❌ Erreur téléchargement GPKG: {e}")
+        logger.error(f"❌ Erreur téléchargement/extraction: {e}")
         raise
 
 
@@ -225,19 +253,25 @@ def update_firebase(db, data, changes):
         raise
 
 
-def cleanup_temp_file(file_path):
-    """Nettoyer le fichier temporaire"""
+def cleanup_temp_files(file_path, temp_dir=None):
+    """Nettoyer les fichiers temporaires"""
     try:
-        if os.path.exists(file_path):
+        if file_path and os.path.exists(file_path):
             os.remove(file_path)
             logger.info(f"🧹 Fichier temporaire supprimé: {file_path}")
+        
+        if temp_dir and os.path.exists(temp_dir):
+            import shutil
+            shutil.rmtree(temp_dir)
+            logger.info(f"🧹 Répertoire temporaire supprimé: {temp_dir}")
     except Exception as e:
-        logger.warning(f"⚠️ Erreur suppression fichier temporaire: {e}")
+        logger.warning(f"⚠️ Erreur suppression fichiers temporaires: {e}")
 
 
 def main():
     """Fonction principale"""
-    temp_file = None
+    gpkg_file = None
+    temp_dir = None
     
     try:
         logger.info("🚀 Démarrage de la synchronisation automatique")
@@ -246,11 +280,11 @@ def main():
         # 1. Initialiser Firebase
         db = initialize_firebase()
         
-        # 2. Télécharger le fichier GPKG
-        temp_file = download_gpkg(GPKG_URL)
+        # 2. Télécharger et extraire le fichier GPKG
+        gpkg_file, temp_dir = download_and_extract_gpkg(GPKG_URL)
         
         # 3. Filtrer les données pour Val-d'Or
-        new_data = filter_valdor_data(temp_file)
+        new_data = filter_valdor_data(gpkg_file)
         
         # 4. Charger les données existantes
         old_data = load_existing_data(db)
@@ -291,9 +325,8 @@ def main():
         return 1
         
     finally:
-        # Nettoyer le fichier temporaire
-        if temp_file:
-            cleanup_temp_file(temp_file)
+        # Nettoyer les fichiers temporaires
+        cleanup_temp_files(gpkg_file, temp_dir)
 
 
 if __name__ == '__main__':

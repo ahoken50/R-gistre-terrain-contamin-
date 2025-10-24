@@ -125,12 +125,12 @@ def filter_valdor_data(gpkg_path):
         layers = fiona.listlayers(gpkg_path)
         logger.info(f"📋 Couches disponibles: {layers}")
         
-        # Essayer de lire la couche 'point' qui contient les terrains contaminés
+        # Essayer de lire la couche 'detailsFiches' qui contient les informations détaillées
         layer_to_read = None
-        if 'point' in layers:
-            layer_to_read = 'point'
-        elif 'detailsFiches' in layers:
+        if 'detailsFiches' in layers:
             layer_to_read = 'detailsFiches'
+        elif 'point' in layers:
+            layer_to_read = 'point'
         else:
             # Utiliser la première couche par défaut
             layer_to_read = layers[0] if layers else None

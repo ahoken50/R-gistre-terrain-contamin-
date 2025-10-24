@@ -1069,24 +1069,83 @@ window.rejectDecontamination = function(itemId) {
 /**
  * Afficher une notification temporaire
  */
-function showNotification(message, type = 'info') {
-    const alertClass = type === 'success' ? 'alert-success' : 
-                      type === 'danger' ? 'alert-danger' : 
-                      type === 'warning' ? 'alert-warning' : 'alert-info';
-    
-    const notification = document.createElement('div');
-    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-    notification.style.zIndex = '9999';
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
+function showNotification(message, type = 'info', duration = 5000) {
+       const alertClass = type === 'success' ? 'alert-success' : 
+                         type === 'danger' ? 'alert-danger' : 
+                         type === 'warning' ? 'alert-warning' : 'alert-info';
+       
+       const icon = type === 'success' ? '✅' :
+                    type === 'danger' ? '❌' :
+                    type === 'warning' ? '⚠️' : 'ℹ️';
+       
+       const notification = document.createElement('div');
+       notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+       notification.style.zIndex = '9999';
+       notification.style.minWidth = '300px';
+       notification.style.maxWidth = '600px';
+       notification.innerHTML = `
+           <strong>${icon} ${message}</strong>
+           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+       `;
+       document.body.appendChild(notification);
+       
+       setTimeout(() => {
+           if (notification.parentNode) {
+               notification.classList.remove('show');
+               setTimeout(() => {
+                   if (notification.parentNode) {
+                       notification.remove();
+                   }
+               }, 150);
+           }
+       }, duration);
+   }
+   
+   /**
+    * Afficher une notification de mise à jour avec détails
+    */
+   function showUpdateNotification(details) {
+       const { newCount = 0, modifiedCount = 0, removedCount = 0, lastUpdate = null } = details;
+       
+       let message = '<div class="mb-2"><strong>🔄 Mise à jour du registre gouvernemental</strong></div>';
+       
+       if (newCount === 0 && modifiedCount === 0 && removedCount === 0) {
+           message += '<div>Le registre est déjà à jour.</div>';
+       } else {
+           message += '<ul class="mb-0 mt-2">';
+           if (newCount > 0) message += `<li>${newCount} nouveau(x) terrain(s) ajouté(s)</li>`;
+           if (modifiedCount > 0) message += `<li>${modifiedCount} terrain(s) modifié(s)</li>`;
+           if (removedCount > 0) message += `<li>${removedCount} terrain(s) retiré(s)</li>`;
+           message += '</ul>';
+       }
+       
+       if (lastUpdate) {
+           const date = new Date(lastUpdate);
+           message += `<div class="mt-2 small text-muted">Dernière mise à jour : ${date.toLocaleDateString('fr-CA')} à ${date.toLocaleTimeString('fr-CA')}</div>`;
+       }
+       
+       const notification = document.createElement('div');
+       notification.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+       notification.style.zIndex = '9999';
+       notification.style.minWidth = '400px';
+       notification.style.maxWidth = '600px';
+       notification.innerHTML = `
+           ${message}
+           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+       `;
+       document.body.appendChild(notification);
+       
+       setTimeout(() => {
+           if (notification.parentNode) {
+               notification.classList.remove('show');
+               setTimeout(() => {
+                   if (notification.parentNode) {
+                       notification.remove();
+                   }
+               }, 150);
+           }
+       }, 10000);
+   }
     }, 3000);
 }
 

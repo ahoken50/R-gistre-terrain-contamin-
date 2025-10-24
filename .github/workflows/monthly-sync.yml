@@ -27,7 +27,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install geopandas requests firebase-admin pandas
+          pip install -r requirements.txt
       
       - name: Run synchronization script
         env:

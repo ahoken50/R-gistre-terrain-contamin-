@@ -120,10 +120,31 @@ def filter_valdor_data(gpkg_path):
     try:
         logger.info(f"🔍 Lecture du fichier GPKG: {gpkg_path}")
         
-        # Lire le GeoPackage
-        gdf = gpd.read_file(gpkg_path)
+        # Lister les couches disponibles
+        import fiona
+        layers = fiona.listlayers(gpkg_path)
+        logger.info(f"📋 Couches disponibles: {layers}")
+        
+        # Essayer de lire la couche 'point' qui contient les terrains contaminés
+        layer_to_read = None
+        if 'point' in layers:
+            layer_to_read = 'point'
+        elif 'detailsFiches' in layers:
+            layer_to_read = 'detailsFiches'
+        else:
+            # Utiliser la première couche par défaut
+            layer_to_read = layers[0] if layers else None
+        
+        if not layer_to_read:
+            raise ValueError("Aucune couche valide trouvée dans le GPKG")
+        
+        logger.info(f"📖 Lecture de la couche: {layer_to_read}")
+        
+        # Lire le GeoPackage avec la couche spécifiée
+        gdf = gpd.read_file(gpkg_path, layer=layer_to_read)
         
         logger.info(f"📊 Total d'enregistrements: {len(gdf)}")
+        logger.info(f"📋 Colonnes disponibles: {list(gdf.columns)}")
         
         # Filtrer pour Val-d'Or
         valdor_data = gdf[gdf['NOM_MUNIC'].str.contains(MUNICIPALITY, case=False, na=False)]

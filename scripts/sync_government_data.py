@@ -39,9 +39,9 @@ def initialize_firebase():
     """Initialiser Firebase Admin SDK"""
     try:
         # Charger les credentials depuis la variable d'environnement
-        cred_json = os.environ.get('FIREBASE_CREDENTIALS')
+        cred_json = os.environ.get('FIREBASE_CREDENTIALS') or os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if not cred_json:
-            raise ValueError("FIREBASE_CREDENTIALS environment variable not set")
+            raise ValueError("FIREBASE_SERVICE_ACCOUNT environment variable not set. Please configure the GitHub secret.")
         
         cred_dict = json.loads(cred_json)
         cred = credentials.Certificate(cred_dict)

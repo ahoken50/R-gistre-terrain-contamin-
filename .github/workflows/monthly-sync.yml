@@ -31,7 +31,7 @@ jobs:
       
       - name: Run synchronization script
         env:
-          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           python scripts/sync_government_data.py
       

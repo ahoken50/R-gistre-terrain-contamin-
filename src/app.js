@@ -1148,8 +1148,6 @@ function showNotification(message, type = 'info', duration = 5000) {
            }
        }, 10000);
    }
-    }, 3000);
-}
 
 /**
  * Forcer le rafraîchissement du cache (pour synchroniser entre appareils)

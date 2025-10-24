@@ -147,7 +147,13 @@ def filter_valdor_data(gpkg_path):
         logger.info(f"📋 Colonnes disponibles: {list(gdf.columns)}")
         
         # Filtrer pour Val-d'Or
-        valdor_data = gdf[gdf['NOM_MUNIC'].str.contains(MUNICIPALITY, case=False, na=False)]
+        # La colonne peut être NOM_MUNIC ou LST_MRC_REG_ADM selon la couche
+        if 'NOM_MUNIC' in gdf.columns:
+            valdor_data = gdf[gdf['NOM_MUNIC'].str.contains(MUNICIPALITY, case=False, na=False)]
+        elif 'LST_MRC_REG_ADM' in gdf.columns:
+            valdor_data = gdf[gdf['LST_MRC_REG_ADM'].str.contains(MUNICIPALITY, case=False, na=False)]
+        else:
+            raise ValueError(f"Aucune colonne de municipalité trouvée. Colonnes disponibles: {list(gdf.columns)}")
         
         logger.info(f"✅ Enregistrements pour {MUNICIPALITY}: {len(valdor_data)}")
         

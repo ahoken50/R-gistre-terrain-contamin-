@@ -199,7 +199,7 @@ def filter_valdor_data(gpkg_path):
             }
             
             # Ajouter les détails des fiches si disponibles
-            if not fiches_grouped.empty and no_mef in fiches_grouped['NO_MEF_LIEU'].values:
+            if not fiches_grouped.empty and (fiches_grouped['NO_MEF_LIEU'] == no_mef).any():
                 fiche_data = fiches_grouped[fiches_grouped['NO_MEF_LIEU'] == no_mef].iloc[0]
                 
                 record['NO_SEQ_DOSSIER'] = fiche_data.get('NO_SEQ_DOSSIER', '')

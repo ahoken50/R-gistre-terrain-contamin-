@@ -213,103 +213,109 @@ def filter_valdor_data(gpkg_path):
                 if no_mef_key is not None:
                     fiches_dict[str(no_mef_key)] = row.to_dict()
         
-        # 4. Fusionner les données
-        data_list = []
-        for idx, row in valdor_points.iterrows():
-            no_mef = row.get('NO_MEF_LIEU')
-            
-            # S'assurer que no_mef est un scalaire
-            if hasattr(no_mef, '__iter__') and not isinstance(no_mef, str):
-                no_mef = no_mef[0] if len(no_mef) > 0 else None
-            
-            # Convertir en type Python natif si nécessaire
-            if hasattr(no_mef, 'item'):
-                no_mef = no_mef.item()
-            
-            # Convertir no_mef en string pour la recherche
-            no_mef_str = str(no_mef) if no_mef else None
-            
-            record = {
-                'NO_MEF_LIEU': safe_int(no_mef, no_mef),  # Garder original si non-numérique
-                'LATITUDE': safe_float(row.get('LATITUDE'), 0.0),
-                'LONGITUDE': safe_float(row.get('LONGITUDE'), 0.0),
-                'ADR_CIV_LIEU': str(row.get('ADR_CIV_LIEU', '')),
-                'CODE_POST_LIEU': str(row.get('CODE_POST_LIEU', '')),
-                'LST_MRC_REG_ADM': str(row.get('LST_MRC_REG_ADM', '')),
-                'DESC_MILIEU_RECEPT': str(row.get('DESC_MILIEU_RECEPT', '')),
-                'NB_FICHES': safe_int(row.get('NB_FICHES'), 0)
-            }
-            
-            # Ajouter les détails des fiches si disponibles
-            if no_mef_str in fiches_dict:
-                fiche_data = fiches_dict[no_mef_str]
-                record['NO_SEQ_DOSSIER'] = str(fiche_data.get('NO_SEQ_DOSSIER', ''))
-                record['ETAT_REHAB'] = str(fiche_data.get('ETAT_REHAB', ''))
-                record['QUAL_SOLS_AV'] = str(fiche_data.get('QUAL_SOLS_AV', ''))
-                record['QUAL_SOLS'] = str(fiche_data.get('QUAL_SOLS', ''))
-                record['CONTAM_SOL_EXTRA'] = str(fiche_data.get('CONTAM_SOL_EXTRA', ''))
-                record['CONTAM_EAU_EXTRA'] = str(fiche_data.get('CONTAM_EAU_EXTRA', ''))
-                
-                date_val = fiche_data.get('DATE_CRE_MAJ')
-                if pd.notna(date_val):
-                    if hasattr(date_val, 'strftime'):
-                        record['DATE_CRE_MAJ'] = date_val.strftime('%Y-%m-%d')
-                    else:
-                        record['DATE_CRE_MAJ'] = str(date_val)
-                else:
-                    record['DATE_CRE_MAJ'] = ''
-                
-                # Générer les URLs des fiches
-                dossiers = record['NO_SEQ_DOSSIER'].split(', ')
-                record['FICHES_URLS'] = [
-                    f"https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no={d.strip()}"
-                    for d in dossiers if d and d.strip() and d.strip() != 'nan'
-                ]
-                
-                # Vérifier si décontaminé
-                record['IS_DECONTAMINATED'] = 'Terminée' in record['ETAT_REHAB']
+# 4. Fusionner les données
+data_list = []
+for idx, row in valdor_points.iterrows():
+    # Extraire no_mef de manière sécurisée
+    no_mef_raw = row.get('NO_MEF_LIEU')
+    
+    # Fonction pour extraire valeur scalaire
+    def extract_scalar(val):
+        """Extraire une valeur scalaire depuis n'importe quel type"""
+        if val is None:
+            return None
+        if isinstance(val, (str, int, float, bool)):
+            return val
+        if hasattr(val, 'item'):  # numpy/pandas scalar
+            return val.item()
+        if hasattr(val, '__iter__'):
+            try:
+                if len(val) == 1:
+                    return extract_scalar(val[0])
+                elif len(val) > 1:
+                    return str(val)
+            except:
+                pass
+        return str(val) if val else None
+    
+    no_mef = extract_scalar(no_mef_raw)
+    no_mef_str = str(no_mef) if no_mef is not None else None
+    
+    # Fonction pour obtenir valeur propre
+    def get_clean_value(row_obj, key, default=''):
+        """Obtenir une valeur nettoyée depuis la row"""
+        val = row_obj.get(key)
+        val = extract_scalar(val)
+        if val is None:
+            return default
+        try:
+            if pd.isna(val):
+                return default
+        except:
+            pass
+        return val
+    
+    # Créer le record avec valeurs nettoyées
+    record = {
+        'NO_MEF_LIEU': safe_int(no_mef, no_mef),
+        'LATITUDE': safe_float(get_clean_value(row, 'LATITUDE'), 0.0),
+        'LONGITUDE': safe_float(get_clean_value(row, 'LONGITUDE'), 0.0),
+        'ADR_CIV_LIEU': str(get_clean_value(row, 'ADR_CIV_LIEU', '')),
+        'CODE_POST_LIEU': str(get_clean_value(row, 'CODE_POST_LIEU', '')),
+        'LST_MRC_REG_ADM': str(get_clean_value(row, 'LST_MRC_REG_ADM', '')),
+        'DESC_MILIEU_RECEPT': str(get_clean_value(row, 'DESC_MILIEU_RECEPT', '')),
+        'NB_FICHES': safe_int(get_clean_value(row, 'NB_FICHES'), 0)
+    }
+    
+    # Ajouter les détails des fiches si disponibles
+    if no_mef_str and no_mef_str in fiches_dict:
+        fiche_data = fiches_dict[no_mef_str]
+        record['NO_SEQ_DOSSIER'] = str(fiche_data.get('NO_SEQ_DOSSIER', ''))
+        record['ETAT_REHAB'] = str(fiche_data.get('ETAT_REHAB', ''))
+        record['QUAL_SOLS_AV'] = str(fiche_data.get('QUAL_SOLS_AV', ''))
+        record['QUAL_SOLS'] = str(fiche_data.get('QUAL_SOLS', ''))
+        record['CONTAM_SOL_EXTRA'] = str(fiche_data.get('CONTAM_SOL_EXTRA', ''))
+        record['CONTAM_EAU_EXTRA'] = str(fiche_data.get('CONTAM_EAU_EXTRA', ''))
+        
+        date_val = fiche_data.get('DATE_CRE_MAJ')
+        if date_val and pd.notna(date_val):
+            if hasattr(date_val, 'strftime'):
+                record['DATE_CRE_MAJ'] = date_val.strftime('%Y-%m-%d')
             else:
-                # Valeurs par défaut si pas de fiches
-                record['NO_SEQ_DOSSIER'] = ''
-                record['ETAT_REHAB'] = ''
-                record['QUAL_SOLS_AV'] = ''
-                record['QUAL_SOLS'] = ''
-                record['CONTAM_SOL_EXTRA'] = ''
-                record['CONTAM_EAU_EXTRA'] = ''
-                record['DATE_CRE_MAJ'] = ''
-                record['FICHES_URLS'] = []
-                record['IS_DECONTAMINATED'] = False
-            
-            # Nettoyer les valeurs None et NaN
-            for key, value in record.items():
-                if pd.isna(value) or value is None:
-                    if key in ['FICHES_URLS']:
-                        record[key] = []
-                    elif key in ['IS_DECONTAMINATED']:
-                        record[key] = False
-                    elif key in ['LATITUDE', 'LONGITUDE']:
-                        record[key] = 0.0
-                    elif key in ['NB_FICHES']:
-                        record[key] = 0
-                    elif key in ['NO_MEF_LIEU']:
-                        record[key] = ''
-                    else:
-                        record[key] = ''
-                elif isinstance(value, (list, dict, bool)):
-                    pass  # Garder tel quel
-                elif not isinstance(value, (int, float, str)):
-                    record[key] = str(value)
-            
-            data_list.append(record)
+                record['DATE_CRE_MAJ'] = str(date_val)
+        else:
+            record['DATE_CRE_MAJ'] = ''
         
-        logger.info(f"✅ {len(data_list)} enregistrements complets pour Val-d'Or")
+        # Générer les URLs des fiches
+        dossiers = record['NO_SEQ_DOSSIER'].split(', ')
+        record['FICHES_URLS'] = [
+            f"https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no={d.strip()}"
+            for d in dossiers if d and d.strip() and d.strip() != 'nan'
+        ]
         
-        return data_list
-    except Exception as e:
-        logger.error(f"❌ Erreur filtrage données: {e}")
-        import traceback
-        traceback.print_exc()
-        raise
+        # Vérifier si décontaminé
+        record['IS_DECONTAMINATED'] = 'Terminée' in record['ETAT_REHAB']
+    else:
+        # Valeurs par défaut si pas de fiches
+        record.update({
+            'NO_SEQ_DOSSIER': '',
+            'ETAT_REHAB': '',
+            'QUAL_SOLS_AV': '',
+            'QUAL_SOLS': '',
+            'CONTAM_SOL_EXTRA': '',
+            'CONTAM_EAU_EXTRA': '',
+            'DATE_CRE_MAJ': '',
+            'FICHES_URLS': [],
+            'IS_DECONTAMINATED': False
+        })
+    
+    # Validation finale - s'assurer que tout est JSON-serializable
+    for key, value in record.items():
+        if not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+            record[key] = str(value)
+    
+    data_list.append(record)
+
 
 
 def load_existing_data(db):

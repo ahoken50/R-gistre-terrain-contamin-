@@ -397,13 +397,13 @@ function identifyDecontaminatedLands(officialReferences) {
     
     governmentData.forEach(terrain => {
         // Index par référence
-        const ref = (terrain.NO_MEF_LIEU || terrain.reference || '').toLowerCase().trim();
+        const ref = (terrain.NO_MEF_LIEU || terrain.reference || '').toString().toLowerCase().trim();
         if (ref) {
             govTerrainMapByRef.set(ref, terrain);
         }
         
         // Index par adresse normalisée pour cross-référence
-        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toLowerCase().trim();
+        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
         if (address) {
             const normalizedAddr = normalizeAddress(address);
             if (!govTerrainMapByAddress.has(normalizedAddr)) {

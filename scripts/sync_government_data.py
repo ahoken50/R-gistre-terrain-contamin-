@@ -138,6 +138,27 @@ def belongs_to_valdor(row):
 
 def filter_valdor_data(gpkg_path):
     """Filtrer et agréger les données pour Val-d'Or"""
+    
+    # Fonctions helper pour conversion sécurisée
+    def safe_int(value, default=None):
+        """Convertir en int de manière sécurisée"""
+        if value is None or pd.isna(value):
+            return default
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            # Si c'est un string non-numérique comme 'X2050458', le garder tel quel
+            return str(value) if value else default
+    
+    def safe_float(value, default=0.0):
+        """Convertir en float de manière sécurisée"""
+        if value is None or pd.isna(value):
+            return default
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return default
+    
     try:
         logger.info(f"🔍 Lecture du fichier GPKG: {gpkg_path}")
         
@@ -183,12 +204,14 @@ def filter_valdor_data(gpkg_path):
             
             # Convertir en dictionnaire pour accès rapide
             for _, row in fiches_grouped.iterrows():
-                no_mef = row['NO_MEF_LIEU']
+                no_mef_key = row['NO_MEF_LIEU']
                 # S'assurer que no_mef est un scalaire
-                if hasattr(no_mef, '__iter__') and not isinstance(no_mef, str):
-                    no_mef = no_mef[0] if len(no_mef) > 0 else None
-                if no_mef is not None:
-                    fiches_dict[no_mef] = row.to_dict()
+                if hasattr(no_mef_key, '__iter__') and not isinstance(no_mef_key, str):
+                    no_mef_key = no_mef_key[0] if len(no_mef_key) > 0 else None
+                if hasattr(no_mef_key, 'item'):
+                    no_mef_key = no_mef_key.item()
+                if no_mef_key is not None:
+                    fiches_dict[str(no_mef_key)] = row.to_dict()
         
         # 4. Fusionner les données
         data_list = []
@@ -200,23 +223,26 @@ def filter_valdor_data(gpkg_path):
                 no_mef = no_mef[0] if len(no_mef) > 0 else None
             
             # Convertir en type Python natif si nécessaire
-            if hasattr(no_mef, 'item'):  # numpy/pandas scalar
+            if hasattr(no_mef, 'item'):
                 no_mef = no_mef.item()
             
+            # Convertir no_mef en string pour la recherche
+            no_mef_str = str(no_mef) if no_mef else None
+            
             record = {
-                'NO_MEF_LIEU': int(no_mef) if no_mef else None,
-                'LATITUDE': float(row.get('LATITUDE')) if pd.notna(row.get('LATITUDE')) else None,
-                'LONGITUDE': float(row.get('LONGITUDE')) if pd.notna(row.get('LONGITUDE')) else None,
+                'NO_MEF_LIEU': safe_int(no_mef, no_mef),  # Garder original si non-numérique
+                'LATITUDE': safe_float(row.get('LATITUDE'), 0.0),
+                'LONGITUDE': safe_float(row.get('LONGITUDE'), 0.0),
                 'ADR_CIV_LIEU': str(row.get('ADR_CIV_LIEU', '')),
                 'CODE_POST_LIEU': str(row.get('CODE_POST_LIEU', '')),
                 'LST_MRC_REG_ADM': str(row.get('LST_MRC_REG_ADM', '')),
                 'DESC_MILIEU_RECEPT': str(row.get('DESC_MILIEU_RECEPT', '')),
-                'NB_FICHES': int(row.get('NB_FICHES', 0)) if pd.notna(row.get('NB_FICHES')) else 0
+                'NB_FICHES': safe_int(row.get('NB_FICHES'), 0)
             }
             
             # Ajouter les détails des fiches si disponibles
-            if no_mef in fiches_dict:
-                fiche_data = fiches_dict[no_mef]
+            if no_mef_str in fiches_dict:
+                fiche_data = fiches_dict[no_mef_str]
                 record['NO_SEQ_DOSSIER'] = str(fiche_data.get('NO_SEQ_DOSSIER', ''))
                 record['ETAT_REHAB'] = str(fiche_data.get('ETAT_REHAB', ''))
                 record['QUAL_SOLS_AV'] = str(fiche_data.get('QUAL_SOLS_AV', ''))
@@ -263,8 +289,10 @@ def filter_valdor_data(gpkg_path):
                         record[key] = False
                     elif key in ['LATITUDE', 'LONGITUDE']:
                         record[key] = 0.0
-                    elif key in ['NO_MEF_LIEU', 'NB_FICHES']:
+                    elif key in ['NB_FICHES']:
                         record[key] = 0
+                    elif key in ['NO_MEF_LIEU']:
+                        record[key] = ''
                     else:
                         record[key] = ''
                 elif isinstance(value, (list, dict, bool)):
@@ -282,7 +310,6 @@ def filter_valdor_data(gpkg_path):
         import traceback
         traceback.print_exc()
         raise
-
 
 
 def load_existing_data(db):

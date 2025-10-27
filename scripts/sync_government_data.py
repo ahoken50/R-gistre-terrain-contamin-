@@ -115,8 +115,29 @@ def download_and_extract_gpkg(url):
         raise
 
 
+def normalize_text(text):
+    """Normaliser le texte pour la comparaison"""
+    if pd.isna(text) or text is None:
+        return ""
+    return str(text).upper().strip()
+
+def belongs_to_valdor(row):
+    """Vérifier si un terrain appartient à Val-d'Or"""
+    address = normalize_text(row.get("ADR_CIV_LIEU", ""))
+    mrc = normalize_text(row.get("LST_MRC_REG_ADM", ""))
+    
+    # Critère 1: L'adresse contient Val-d'Or
+    if any(keyword in address for keyword in ["VAL-D'OR", "VAL D'OR", "VALDOR"]):
+        return True
+    
+    # Critère 2: MRC La Vallée-de-l'Or ET "VAL" dans l'adresse
+    if "LA VALLÉE-DE-L'OR" in mrc and "VAL" in address:
+        return True
+    
+    return False
+
 def filter_valdor_data(gpkg_path):
-    """Filtrer les données pour Val-d'Or"""
+    """Filtrer et agréger les données pour Val-d'Or"""
     try:
         logger.info(f"🔍 Lecture du fichier GPKG: {gpkg_path}")
         
@@ -125,54 +146,103 @@ def filter_valdor_data(gpkg_path):
         layers = fiona.listlayers(gpkg_path)
         logger.info(f"📋 Couches disponibles: {layers}")
         
-        # Essayer de lire la couche 'detailsFiches' qui contient les informations détaillées
-        layer_to_read = None
-        if 'detailsFiches' in layers:
-            layer_to_read = 'detailsFiches'
-        elif 'point' in layers:
-            layer_to_read = 'point'
-        else:
-            # Utiliser la première couche par défaut
-            layer_to_read = layers[0] if layers else None
+        # 1. Lire la couche 'point' pour les localisations
+        if 'point' not in layers:
+            raise ValueError("Couche 'point' non trouvée dans le GPKG")
         
-        if not layer_to_read:
-            raise ValueError("Aucune couche valide trouvée dans le GPKG")
-        
-        logger.info(f"📖 Lecture de la couche: {layer_to_read}")
-        
-        # Lire le GeoPackage avec la couche spécifiée
-        gdf = gpd.read_file(gpkg_path, layer=layer_to_read)
-        
-        logger.info(f"📊 Total d'enregistrements: {len(gdf)}")
-        logger.info(f"📋 Colonnes disponibles: {list(gdf.columns)}")
+        logger.info("📖 Lecture de la couche 'point'...")
+        points_df = gpd.read_file(gpkg_path, layer='point')
+        logger.info(f"📊 Total de points: {len(points_df)}")
         
         # Filtrer pour Val-d'Or
-        # La colonne peut être NOM_MUNIC ou LST_MRC_REG_ADM selon la couche
-        if 'NOM_MUNIC' in gdf.columns:
-            valdor_data = gdf[gdf['NOM_MUNIC'].str.contains(MUNICIPALITY, case=False, na=False)]
-        elif 'LST_MRC_REG_ADM' in gdf.columns:
-            valdor_data = gdf[gdf['LST_MRC_REG_ADM'].str.contains(MUNICIPALITY, case=False, na=False)]
+        valdor_points = points_df[points_df.apply(belongs_to_valdor, axis=1)]
+        logger.info(f"✅ Points pour Val-d'Or: {len(valdor_points)}")
+        
+        # 2. Lire la couche 'detailsFiches' pour les détails
+        if 'detailsFiches' not in layers:
+            logger.warning("⚠️ Couche 'detailsFiches' non trouvée, utilisation des données de base uniquement")
+            fiches_df = pd.DataFrame()
         else:
-            raise ValueError(f"Aucune colonne de municipalité trouvée. Colonnes disponibles: {list(gdf.columns)}")
+            logger.info("📖 Lecture de la couche 'detailsFiches'...")
+            fiches_df = gpd.read_file(gpkg_path, layer='detailsFiches')
+            logger.info(f"📊 Total de fiches: {len(fiches_df)}")
         
-        logger.info(f"✅ Enregistrements pour {MUNICIPALITY}: {len(valdor_data)}")
+        # 3. Agréger les fiches par NO_MEF_LIEU
+        if not fiches_df.empty and 'NO_MEF_LIEU' in fiches_df.columns:
+            logger.info("🔗 Agrégation des fiches par terrain...")
+            fiches_grouped = fiches_df.groupby('NO_MEF_LIEU').agg({
+                'NO_SEQ_DOSSIER': lambda x: ', '.join(map(str, x)),
+                'ETAT_REHAB': lambda x: ' | '.join(filter(None, map(str, x))),
+                'QUAL_SOLS_AV': lambda x: ', '.join(filter(None, map(str, x))),
+                'QUAL_SOLS': lambda x: ', '.join(filter(None, map(str, x))),
+                'CONTAM_SOL_EXTRA': lambda x: '; '.join(filter(None, map(str, x))),
+                'CONTAM_EAU_EXTRA': lambda x: '; '.join(filter(None, map(str, x))),
+                'DATE_CRE_MAJ': lambda x: max(x) if len(x) > 0 else None
+            }).reset_index()
+        else:
+            fiches_grouped = pd.DataFrame()
         
-        # Convertir en dictionnaire
+        # 4. Fusionner les données
         data_list = []
-        for idx, row in valdor_data.iterrows():
-            record = {}
-            for col in valdor_data.columns:
-                value = row[col]
-                # Convertir les types non-JSON en string
-                if hasattr(value, 'wkt'):  # Géométrie
-                    continue  # Ignorer la géométrie
-                elif pd.isna(value):
-                    record[col] = None
-                elif isinstance(value, (int, float, str, bool)):
-                    record[col] = value
-                else:
-                    record[col] = str(value)
+        for idx, row in valdor_points.iterrows():
+            no_mef = row.get('NO_MEF_LIEU')
+            
+            record = {
+                'NO_MEF_LIEU': no_mef,
+                'LATITUDE': row.get('LATITUDE'),
+                'LONGITUDE': row.get('LONGITUDE'),
+                'ADR_CIV_LIEU': row.get('ADR_CIV_LIEU'),
+                'CODE_POST_LIEU': row.get('CODE_POST_LIEU'),
+                'LST_MRC_REG_ADM': row.get('LST_MRC_REG_ADM'),
+                'DESC_MILIEU_RECEPT': row.get('DESC_MILIEU_RECEPT'),
+                'NB_FICHES': row.get('NB_FICHES', 0)
+            }
+            
+            # Ajouter les détails des fiches si disponibles
+            if not fiches_grouped.empty and no_mef in fiches_grouped['NO_MEF_LIEU'].values:
+                fiche_data = fiches_grouped[fiches_grouped['NO_MEF_LIEU'] == no_mef].iloc[0]
+                
+                record['NO_SEQ_DOSSIER'] = fiche_data.get('NO_SEQ_DOSSIER', '')
+                record['ETAT_REHAB'] = fiche_data.get('ETAT_REHAB', '')
+                record['QUAL_SOLS_AV'] = fiche_data.get('QUAL_SOLS_AV', '')
+                record['QUAL_SOLS'] = fiche_data.get('QUAL_SOLS', '')
+                record['CONTAM_SOL_EXTRA'] = fiche_data.get('CONTAM_SOL_EXTRA', '')
+                record['CONTAM_EAU_EXTRA'] = fiche_data.get('CONTAM_EAU_EXTRA', '')
+                record['DATE_CRE_MAJ'] = str(fiche_data.get('DATE_CRE_MAJ', ''))
+                
+                # Générer les URLs des fiches
+                dossiers = str(record['NO_SEQ_DOSSIER']).split(', ')
+                record['FICHES_URLS'] = [
+                    f"https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no={d}"
+                    for d in dossiers if d and d != 'nan'
+                ]
+                
+                # Vérifier si décontaminé
+                record['IS_DECONTAMINATED'] = 'Terminée' in str(record['ETAT_REHAB'])
+            else:
+                # Valeurs par défaut si pas de fiches
+                record['NO_SEQ_DOSSIER'] = ''
+                record['ETAT_REHAB'] = ''
+                record['QUAL_SOLS_AV'] = ''
+                record['QUAL_SOLS'] = ''
+                record['CONTAM_SOL_EXTRA'] = ''
+                record['CONTAM_EAU_EXTRA'] = ''
+                record['DATE_CRE_MAJ'] = ''
+                record['FICHES_URLS'] = []
+                record['IS_DECONTAMINATED'] = False
+            
+            # Convertir les valeurs None en string vide et les types non-JSON
+            for key, value in record.items():
+                if pd.isna(value) or value is None:
+                    record[key] = ''
+                elif isinstance(value, (list, dict, bool)):
+                    pass  # Garder tel quel
+                elif not isinstance(value, (int, float, str)):
+                    record[key] = str(value)
+            
             data_list.append(record)
+        
+        logger.info(f"✅ {len(data_list)} enregistrements complets pour Val-d'Or")
         
         return data_list
     except Exception as e:

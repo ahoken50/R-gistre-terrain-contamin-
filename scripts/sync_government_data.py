@@ -39,10 +39,9 @@ SYNC_METADATA_COLLECTION = 'sync_metadata'
 def initialize_firebase():
     """Initialiser Firebase Admin SDK"""
     try:
-        # Charger les credentials depuis la variable d'environnement
         cred_json = os.environ.get('FIREBASE_CREDENTIALS') or os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if not cred_json:
-            raise ValueError("FIREBASE_SERVICE_ACCOUNT environment variable not set. Please configure the GitHub secret.")
+            raise ValueError("FIREBASE_SERVICE_ACCOUNT environment variable not set.")
         
         cred_dict = json.loads(cred_json)
         cred = credentials.Certificate(cred_dict)
@@ -65,10 +64,8 @@ def download_and_extract_gpkg(url):
         response = requests.get(url, stream=True, timeout=300)
         response.raise_for_status()
         
-        # Créer un fichier temporaire pour le ZIP
         temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
         
-        # Télécharger avec barre de progression
         total_size = int(response.headers.get('content-length', 0))
         downloaded = 0
         
@@ -77,21 +74,18 @@ def download_and_extract_gpkg(url):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
-                    if total_size > 0:
+                    if total_size > 0 and downloaded % (1024 * 1024) == 0:
                         progress = (downloaded / total_size) * 100
-                        if downloaded % (1024 * 1024) == 0:  # Log every MB
-                            logger.info(f"Téléchargement: {progress:.1f}%")
+                        logger.info(f"Téléchargement: {progress:.1f}%")
         
         logger.info(f"✅ Fichier ZIP téléchargé: {temp_zip.name}")
-        
-        # Extraire le ZIP
         logger.info("📦 Extraction du fichier ZIP...")
+        
         temp_dir = tempfile.mkdtemp()
         
         with zipfile.ZipFile(temp_zip.name, 'r') as zip_ref:
             zip_ref.extractall(temp_dir)
         
-        # Trouver le fichier GPKG dans le répertoire extrait
         gpkg_file = None
         for root, dirs, files in os.walk(temp_dir):
             for file in files:
@@ -105,8 +99,6 @@ def download_and_extract_gpkg(url):
             raise FileNotFoundError("Aucun fichier .gpkg trouvé dans l'archive ZIP")
         
         logger.info(f"✅ Fichier GPKG extrait: {gpkg_file}")
-        
-        # Nettoyer le fichier ZIP
         os.remove(temp_zip.name)
         
         return gpkg_file, temp_dir
@@ -121,127 +113,79 @@ def normalize_text(text):
         return ""
     return str(text).upper().strip()
 
+
 def belongs_to_valdor(row):
     """Vérifier si un terrain appartient à Val-d'Or"""
     address = normalize_text(row.get("ADR_CIV_LIEU", ""))
     mrc = normalize_text(row.get("LST_MRC_REG_ADM", ""))
     
-    # Critère 1: L'adresse contient Val-d'Or
     if any(keyword in address for keyword in ["VAL-D'OR", "VAL D'OR", "VALDOR"]):
         return True
     
-    # Critère 2: MRC La Vallée-de-l'Or ET "VAL" dans l'adresse
     if "LA VALLÉE-DE-L'OR" in mrc and "VAL" in address:
         return True
     
     return False
 
+
 def filter_valdor_data(gpkg_path):
     """Filtrer et agréger les données pour Val-d'Or"""
     
-    # Fonctions helper pour conversion sécurisée
     def safe_int(value, default=None):
         """Convertir en int de manière sécurisée"""
-        if value is None or pd.isna(value):
+        if value is None:
             return default
+        try:
+            # Vérifier si c'est pd.NA
+            if hasattr(pd, 'NA') and value is pd.NA:
+                return default
+            # Vérifier avec pd.isna de manière sécurisée
+            if not isinstance(value, (list, dict)) and pd.isna(value):
+                return default
+        except:
+            pass
+        
         try:
             return int(value)
         except (ValueError, TypeError):
-            # Si c'est un string non-numérique comme 'X2050458', le garder tel quel
             return str(value) if value else default
     
     def safe_float(value, default=0.0):
         """Convertir en float de manière sécurisée"""
-        if value is None or pd.isna(value):
+        if value is None:
             return default
+        try:
+            if hasattr(pd, 'NA') and value is pd.NA:
+                return default
+            if not isinstance(value, (list, dict)) and pd.isna(value):
+                return default
+        except:
+            pass
+        
         try:
             return float(value)
         except (ValueError, TypeError):
             return default
     
-    try:
-        logger.info(f"🔍 Lecture du fichier GPKG: {gpkg_path}")
-        
-        # Lister les couches disponibles
-        import fiona
-        layers = fiona.listlayers(gpkg_path)
-        logger.info(f"📋 Couches disponibles: {layers}")
-        
-        # 1. Lire la couche 'point' pour les localisations
-        if 'point' not in layers:
-            raise ValueError("Couche 'point' non trouvée dans le GPKG")
-        
-        logger.info("📖 Lecture de la couche 'point'...")
-        points_df = gpd.read_file(gpkg_path, layer='point')
-        logger.info(f"📊 Total de points: {len(points_df)}")
-        
-        # Filtrer pour Val-d'Or
-        valdor_points = points_df[points_df.apply(belongs_to_valdor, axis=1)].copy()
-        logger.info(f"✅ Points pour Val-d'Or: {len(valdor_points)}")
-        
-        # 2. Lire la couche 'detailsFiches' pour les détails
-        if 'detailsFiches' not in layers:
-            logger.warning("⚠️ Couche 'detailsFiches' non trouvée, utilisation des données de base uniquement")
-            fiches_df = pd.DataFrame()
-        else:
-            logger.info("📖 Lecture de la couche 'detailsFiches'...")
-            fiches_df = gpd.read_file(gpkg_path, layer='detailsFiches')
-            logger.info(f"📊 Total de fiches: {len(fiches_df)}")
-        
-        # 3. Agréger les fiches par NO_MEF_LIEU
-        fiches_dict = {}
-        if not fiches_df.empty and 'NO_MEF_LIEU' in fiches_df.columns:
-            logger.info("🔗 Agrégation des fiches par terrain...")
-            fiches_grouped = fiches_df.groupby('NO_MEF_LIEU').agg({
-                'NO_SEQ_DOSSIER': lambda x: ', '.join(map(str, filter(lambda v: pd.notna(v), x))),
-                'ETAT_REHAB': lambda x: ' | '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
-                'QUAL_SOLS_AV': lambda x: ', '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
-                'QUAL_SOLS': lambda x: ', '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
-                'CONTAM_SOL_EXTRA': lambda x: '; '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
-                'CONTAM_EAU_EXTRA': lambda x: '; '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
-                'DATE_CRE_MAJ': lambda x: max([v for v in x if pd.notna(v)], default=None)
-            }).reset_index()
-            
-            # Convertir en dictionnaire pour accès rapide
-            for _, row in fiches_grouped.iterrows():
-                no_mef_key = row['NO_MEF_LIEU']
-                # S'assurer que no_mef est un scalaire
-                if hasattr(no_mef_key, '__iter__') and not isinstance(no_mef_key, str):
-                    no_mef_key = no_mef_key[0] if len(no_mef_key) > 0 else None
-                if hasattr(no_mef_key, 'item'):
-                    no_mef_key = no_mef_key.item()
-                if no_mef_key is not None:
-                    fiches_dict[str(no_mef_key)] = row.to_dict()
-        
-# 4. Fusionner les données
-data_list = []
-for idx, row in valdor_points.iterrows():
-    # Extraire no_mef de manière sécurisée
-    no_mef_raw = row.get('NO_MEF_LIEU')
-    
-    # Fonction pour extraire valeur scalaire
     def extract_scalar(val):
         """Extraire une valeur scalaire depuis n'importe quel type"""
         if val is None:
             return None
         if isinstance(val, (str, int, float, bool)):
             return val
-        if hasattr(val, 'item'):  # numpy/pandas scalar
+        if hasattr(val, 'item'):
             return val.item()
-        if hasattr(val, '__iter__'):
+        if hasattr(val, '__iter__') and not isinstance(val, (str, dict)):
             try:
-                if len(val) == 1:
-                    return extract_scalar(val[0])
-                elif len(val) > 1:
+                val_list = list(val)
+                if len(val_list) == 1:
+                    return extract_scalar(val_list[0])
+                elif len(val_list) > 1:
                     return str(val)
             except:
                 pass
         return str(val) if val else None
     
-    no_mef = extract_scalar(no_mef_raw)
-    no_mef_str = str(no_mef) if no_mef is not None else None
-    
-    # Fonction pour obtenir valeur propre
     def get_clean_value(row_obj, key, default=''):
         """Obtenir une valeur nettoyée depuis la row"""
         val = row_obj.get(key)
@@ -249,80 +193,139 @@ for idx, row in valdor_points.iterrows():
         if val is None:
             return default
         try:
-            if pd.isna(val):
+            if hasattr(pd, 'NA') and val is pd.NA:
+                return default
+            if not isinstance(val, (list, dict)) and pd.isna(val):
                 return default
         except:
             pass
         return val
     
-    # Créer le record avec valeurs nettoyées
-    record = {
-        'NO_MEF_LIEU': safe_int(no_mef, no_mef),
-        'LATITUDE': safe_float(get_clean_value(row, 'LATITUDE'), 0.0),
-        'LONGITUDE': safe_float(get_clean_value(row, 'LONGITUDE'), 0.0),
-        'ADR_CIV_LIEU': str(get_clean_value(row, 'ADR_CIV_LIEU', '')),
-        'CODE_POST_LIEU': str(get_clean_value(row, 'CODE_POST_LIEU', '')),
-        'LST_MRC_REG_ADM': str(get_clean_value(row, 'LST_MRC_REG_ADM', '')),
-        'DESC_MILIEU_RECEPT': str(get_clean_value(row, 'DESC_MILIEU_RECEPT', '')),
-        'NB_FICHES': safe_int(get_clean_value(row, 'NB_FICHES'), 0)
-    }
-    
-    # Ajouter les détails des fiches si disponibles
-    if no_mef_str and no_mef_str in fiches_dict:
-        fiche_data = fiches_dict[no_mef_str]
-        record['NO_SEQ_DOSSIER'] = str(fiche_data.get('NO_SEQ_DOSSIER', ''))
-        record['ETAT_REHAB'] = str(fiche_data.get('ETAT_REHAB', ''))
-        record['QUAL_SOLS_AV'] = str(fiche_data.get('QUAL_SOLS_AV', ''))
-        record['QUAL_SOLS'] = str(fiche_data.get('QUAL_SOLS', ''))
-        record['CONTAM_SOL_EXTRA'] = str(fiche_data.get('CONTAM_SOL_EXTRA', ''))
-        record['CONTAM_EAU_EXTRA'] = str(fiche_data.get('CONTAM_EAU_EXTRA', ''))
+    try:
+        logger.info(f"🔍 Lecture du fichier GPKG: {gpkg_path}")
         
-        date_val = fiche_data.get('DATE_CRE_MAJ')
-        if date_val and pd.notna(date_val):
-            if hasattr(date_val, 'strftime'):
-                record['DATE_CRE_MAJ'] = date_val.strftime('%Y-%m-%d')
-            else:
-                record['DATE_CRE_MAJ'] = str(date_val)
+        import fiona
+        layers = fiona.listlayers(gpkg_path)
+        logger.info(f"📋 Couches disponibles: {layers}")
+        
+        if 'point' not in layers:
+            raise ValueError("Couche 'point' non trouvée dans le GPKG")
+        
+        logger.info("📖 Lecture de la couche 'point'...")
+        points_df = gpd.read_file(gpkg_path, layer='point')
+        logger.info(f"📊 Total de points: {len(points_df)}")
+        
+        valdor_points = points_df[points_df.apply(belongs_to_valdor, axis=1)].copy()
+        logger.info(f"✅ Points pour Val-d'Or: {len(valdor_points)}")
+        
+        if 'detailsFiches' not in layers:
+            logger.warning("⚠️ Couche 'detailsFiches' non trouvée")
+            fiches_df = pd.DataFrame()
         else:
-            record['DATE_CRE_MAJ'] = ''
+            logger.info("📖 Lecture de la couche 'detailsFiches'...")
+            fiches_df = gpd.read_file(gpkg_path, layer='detailsFiches')
+            logger.info(f"📊 Total de fiches: {len(fiches_df)}")
         
-        # Générer les URLs des fiches
-        dossiers = record['NO_SEQ_DOSSIER'].split(', ')
-        record['FICHES_URLS'] = [
-            f"https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no={d.strip()}"
-            for d in dossiers if d and d.strip() and d.strip() != 'nan'
-        ]
+        fiches_dict = {}
+        if not fiches_df.empty and 'NO_MEF_LIEU' in fiches_df.columns:
+            logger.info("🔗 Agrégation des fiches par terrain...")
+            fiches_grouped = fiches_df.groupby('NO_MEF_LIEU').agg({
+                'NO_SEQ_DOSSIER': lambda x: ', '.join(str(v) for v in x if pd.notna(v)),
+                'ETAT_REHAB': lambda x: ' | '.join(str(v) for v in x if pd.notna(v) and v),
+                'QUAL_SOLS_AV': lambda x: ', '.join(str(v) for v in x if pd.notna(v) and v),
+                'QUAL_SOLS': lambda x: ', '.join(str(v) for v in x if pd.notna(v) and v),
+                'CONTAM_SOL_EXTRA': lambda x: '; '.join(str(v) for v in x if pd.notna(v) and v),
+                'CONTAM_EAU_EXTRA': lambda x: '; '.join(str(v) for v in x if pd.notna(v) and v),
+                'DATE_CRE_MAJ': lambda x: max([v for v in x if pd.notna(v)], default=None)
+            }).reset_index()
+            
+            for _, row in fiches_grouped.iterrows():
+                no_mef_key = extract_scalar(row['NO_MEF_LIEU'])
+                if no_mef_key is not None:
+                    fiches_dict[str(no_mef_key)] = row.to_dict()
         
-        # Vérifier si décontaminé
-        record['IS_DECONTAMINATED'] = 'Terminée' in record['ETAT_REHAB']
-    else:
-        # Valeurs par défaut si pas de fiches
-        record.update({
-            'NO_SEQ_DOSSIER': '',
-            'ETAT_REHAB': '',
-            'QUAL_SOLS_AV': '',
-            'QUAL_SOLS': '',
-            'CONTAM_SOL_EXTRA': '',
-            'CONTAM_EAU_EXTRA': '',
-            'DATE_CRE_MAJ': '',
-            'FICHES_URLS': [],
-            'IS_DECONTAMINATED': False
-        })
-    
-    # Validation finale - s'assurer que tout est JSON-serializable
-    for key, value in record.items():
-        if not isinstance(value, (str, int, float, bool, list, dict, type(None))):
-            record[key] = str(value)
-    
-    data_list.append(record)
-
+        data_list = []
+        for idx, row in valdor_points.iterrows():
+            no_mef_raw = row.get('NO_MEF_LIEU')
+            no_mef = extract_scalar(no_mef_raw)
+            no_mef_str = str(no_mef) if no_mef is not None else None
+            
+            record = {
+                'NO_MEF_LIEU': safe_int(no_mef, no_mef),
+                'LATITUDE': safe_float(get_clean_value(row, 'LATITUDE'), 0.0),
+                'LONGITUDE': safe_float(get_clean_value(row, 'LONGITUDE'), 0.0),
+                'ADR_CIV_LIEU': str(get_clean_value(row, 'ADR_CIV_LIEU', '')),
+                'CODE_POST_LIEU': str(get_clean_value(row, 'CODE_POST_LIEU', '')),
+                'LST_MRC_REG_ADM': str(get_clean_value(row, 'LST_MRC_REG_ADM', '')),
+                'DESC_MILIEU_RECEPT': str(get_clean_value(row, 'DESC_MILIEU_RECEPT', '')),
+                'NB_FICHES': safe_int(get_clean_value(row, 'NB_FICHES'), 0)
+            }
+            
+            if no_mef_str and no_mef_str in fiches_dict:
+                fiche_data = fiches_dict[no_mef_str]
+                record['NO_SEQ_DOSSIER'] = str(fiche_data.get('NO_SEQ_DOSSIER', ''))
+                record['ETAT_REHAB'] = str(fiche_data.get('ETAT_REHAB', ''))
+                record['QUAL_SOLS_AV'] = str(fiche_data.get('QUAL_SOLS_AV', ''))
+                record['QUAL_SOLS'] = str(fiche_data.get('QUAL_SOLS', ''))
+                record['CONTAM_SOL_EXTRA'] = str(fiche_data.get('CONTAM_SOL_EXTRA', ''))
+                record['CONTAM_EAU_EXTRA'] = str(fiche_data.get('CONTAM_EAU_EXTRA', ''))
+                
+                date_val = fiche_data.get('DATE_CRE_MAJ')
+                if date_val:
+                    try:
+                        if not isinstance(date_val, (list, dict)) and pd.notna(date_val):
+                            if hasattr(date_val, 'strftime'):
+                                record['DATE_CRE_MAJ'] = date_val.strftime('%Y-%m-%d')
+                            else:
+                                record['DATE_CRE_MAJ'] = str(date_val)
+                        else:
+                            record['DATE_CRE_MAJ'] = ''
+                    except:
+                        record['DATE_CRE_MAJ'] = ''
+                else:
+                    record['DATE_CRE_MAJ'] = ''
+                
+                dossiers = record['NO_SEQ_DOSSIER'].split(', ')
+                record['FICHES_URLS'] = [
+                    f"https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no={d.strip()}"
+                    for d in dossiers if d and d.strip() and d.strip() != 'nan'
+                ]
+                
+                record['IS_DECONTAMINATED'] = 'Terminée' in record['ETAT_REHAB']
+            else:
+                record.update({
+                    'NO_SEQ_DOSSIER': '',
+                    'ETAT_REHAB': '',
+                    'QUAL_SOLS_AV': '',
+                    'QUAL_SOLS': '',
+                    'CONTAM_SOL_EXTRA': '',
+                    'CONTAM_EAU_EXTRA': '',
+                    'DATE_CRE_MAJ': '',
+                    'FICHES_URLS': [],
+                    'IS_DECONTAMINATED': False
+                })
+            
+            # Validation finale
+            for key, value in list(record.items()):
+                if not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                    record[key] = str(value)
+            
+            data_list.append(record)
+        
+        logger.info(f"✅ {len(data_list)} enregistrements complets pour Val-d'Or")
+        return data_list
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur filtrage données: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 def load_existing_data(db):
     """Charger les données existantes depuis Firebase"""
     try:
         logger.info("📥 Chargement des données existantes depuis Firebase")
-        
         doc_ref = db.collection(GOVERNMENT_DATA_COLLECTION).document('current')
         doc = doc_ref.get()
         
@@ -340,24 +343,19 @@ def load_existing_data(db):
 
 
 def detect_changes(old_data, new_data):
-    """Détecter les changements entre anciennes et nouvelles données"""
+    """Détecter les changements"""
     try:
         logger.info("🔍 Détection des changements...")
         
-        # Créer des maps pour recherche rapide
-        old_map = {item.get('NO_MEF_LIEU'): item for item in old_data if item.get('NO_MEF_LIEU')}
-        new_map = {item.get('NO_MEF_LIEU'): item for item in new_data if item.get('NO_MEF_LIEU')}
+        old_map = {str(item.get('NO_MEF_LIEU')): item for item in old_data if item.get('NO_MEF_LIEU')}
+        new_map = {str(item.get('NO_MEF_LIEU')): item for item in new_data if item.get('NO_MEF_LIEU')}
         
-        # Identifier les nouveaux éléments
-        new_items = [item for item in new_data if item.get('NO_MEF_LIEU') not in old_map]
+        new_items = [item for item in new_data if str(item.get('NO_MEF_LIEU')) not in old_map]
+        removed_items = [item for item in old_data if str(item.get('NO_MEF_LIEU')) not in new_map]
         
-        # Identifier les éléments retirés
-        removed_items = [item for item in old_data if item.get('NO_MEF_LIEU') not in new_map]
-        
-        # Identifier les éléments modifiés
         modified_items = []
         for item in new_data:
-            ref = item.get('NO_MEF_LIEU')
+            ref = str(item.get('NO_MEF_LIEU'))
             if ref in old_map:
                 if json.dumps(old_map[ref], sort_keys=True) != json.dumps(item, sort_keys=True):
                     modified_items.append(item)
@@ -380,11 +378,10 @@ def detect_changes(old_data, new_data):
 
 
 def update_firebase(db, data, changes):
-    """Mettre à jour Firebase avec les nouvelles données"""
+    """Mettre à jour Firebase"""
     try:
         logger.info("💾 Mise à jour de Firebase...")
         
-        # Mettre à jour les données gouvernementales
         doc_ref = db.collection(GOVERNMENT_DATA_COLLECTION).document('current')
         doc_ref.set({
             'data': data,
@@ -394,7 +391,6 @@ def update_firebase(db, data, changes):
         
         logger.info(f"✅ {len(data)} enregistrements sauvegardés dans Firebase")
         
-        # Mettre à jour les métadonnées de synchronisation
         sync_metadata = {
             'last_sync_date': datetime.now().isoformat(),
             'last_sync_status': 'success',
@@ -411,7 +407,6 @@ def update_firebase(db, data, changes):
         metadata_ref.set(sync_metadata)
         
         logger.info("✅ Métadonnées de synchronisation sauvegardées")
-        
         return True
     except Exception as e:
         logger.error(f"❌ Erreur mise à jour Firebase: {e}")
@@ -442,29 +437,16 @@ def main():
         logger.info("🚀 Démarrage de la synchronisation automatique")
         logger.info(f"📅 Date: {datetime.now().isoformat()}")
         
-        # 1. Initialiser Firebase
         db = initialize_firebase()
-        
-        # 2. Télécharger et extraire le fichier GPKG
         gpkg_file, temp_dir = download_and_extract_gpkg(GPKG_URL)
-        
-        # 3. Filtrer les données pour Val-d'Or
         new_data = filter_valdor_data(gpkg_file)
-        
-        # 4. Charger les données existantes
         old_data = load_existing_data(db)
-        
-        # 5. Détecter les changements
         changes = detect_changes(old_data, new_data)
-        
-        # 6. Mettre à jour Firebase
         update_firebase(db, new_data, changes)
         
         logger.info("✅ Synchronisation terminée avec succès!")
-        
-        # Afficher le résumé
-        logger.info("\n📊 RÉSUMÉ DE LA SYNCHRONISATION:")
-        logger.info(f"   Total d'enregistrements: {len(new_data)}")
+        logger.info("\n📊 RÉSUMÉ:")
+        logger.info(f"   Total: {len(new_data)}")
         logger.info(f"   Nouveaux: {len(changes['new'])}")
         logger.info(f"   Modifiés: {len(changes['modified'])}")
         logger.info(f"   Retirés: {len(changes['removed'])}")
@@ -474,7 +456,6 @@ def main():
     except Exception as e:
         logger.error(f"❌ Erreur lors de la synchronisation: {e}")
         
-        # Enregistrer l'échec dans Firebase si possible
         try:
             if 'db' in locals():
                 metadata_ref = db.collection(SYNC_METADATA_COLLECTION).document('current')
@@ -490,7 +471,6 @@ def main():
         return 1
         
     finally:
-        # Nettoyer les fichiers temporaires
         cleanup_temp_files(gpkg_file, temp_dir)
 
 

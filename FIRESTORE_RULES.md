@@ -52,22 +52,26 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Données municipales
     match /municipal_data/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;
     }
     
     // Données gouvernementales
     match /government_data/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;  // Permettre l'écriture pour la migration initiale
     }
     
     // Validations
     match /validations/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;
     }
     
     // État de l'application
     match /app_state/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;
     }
     
     // Métadonnées de synchronisation (NOUVEAU)

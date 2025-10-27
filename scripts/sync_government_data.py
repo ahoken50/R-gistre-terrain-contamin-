@@ -155,7 +155,7 @@ def filter_valdor_data(gpkg_path):
         logger.info(f"📊 Total de points: {len(points_df)}")
         
         # Filtrer pour Val-d'Or
-        valdor_points = points_df[points_df.apply(belongs_to_valdor, axis=1)]
+        valdor_points = points_df[points_df.apply(belongs_to_valdor, axis=1)].copy()
         logger.info(f"✅ Points pour Val-d'Or: {len(valdor_points)}")
         
         # 2. Lire la couche 'detailsFiches' pour les détails
@@ -168,57 +168,80 @@ def filter_valdor_data(gpkg_path):
             logger.info(f"📊 Total de fiches: {len(fiches_df)}")
         
         # 3. Agréger les fiches par NO_MEF_LIEU
+        fiches_dict = {}
         if not fiches_df.empty and 'NO_MEF_LIEU' in fiches_df.columns:
             logger.info("🔗 Agrégation des fiches par terrain...")
             fiches_grouped = fiches_df.groupby('NO_MEF_LIEU').agg({
-                'NO_SEQ_DOSSIER': lambda x: ', '.join(map(str, x)),
-                'ETAT_REHAB': lambda x: ' | '.join(filter(None, map(str, x))),
-                'QUAL_SOLS_AV': lambda x: ', '.join(filter(None, map(str, x))),
-                'QUAL_SOLS': lambda x: ', '.join(filter(None, map(str, x))),
-                'CONTAM_SOL_EXTRA': lambda x: '; '.join(filter(None, map(str, x))),
-                'CONTAM_EAU_EXTRA': lambda x: '; '.join(filter(None, map(str, x))),
-                'DATE_CRE_MAJ': lambda x: max(x) if len(x) > 0 else None
+                'NO_SEQ_DOSSIER': lambda x: ', '.join(map(str, filter(lambda v: pd.notna(v), x))),
+                'ETAT_REHAB': lambda x: ' | '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
+                'QUAL_SOLS_AV': lambda x: ', '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
+                'QUAL_SOLS': lambda x: ', '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
+                'CONTAM_SOL_EXTRA': lambda x: '; '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
+                'CONTAM_EAU_EXTRA': lambda x: '; '.join(filter(lambda v: pd.notna(v) and v, map(str, x))),
+                'DATE_CRE_MAJ': lambda x: max([v for v in x if pd.notna(v)], default=None)
             }).reset_index()
-        else:
-            fiches_grouped = pd.DataFrame()
+            
+            # Convertir en dictionnaire pour accès rapide
+            for _, row in fiches_grouped.iterrows():
+                no_mef = row['NO_MEF_LIEU']
+                # S'assurer que no_mef est un scalaire
+                if hasattr(no_mef, '__iter__') and not isinstance(no_mef, str):
+                    no_mef = no_mef[0] if len(no_mef) > 0 else None
+                if no_mef is not None:
+                    fiches_dict[no_mef] = row.to_dict()
         
         # 4. Fusionner les données
         data_list = []
         for idx, row in valdor_points.iterrows():
             no_mef = row.get('NO_MEF_LIEU')
             
+            # S'assurer que no_mef est un scalaire
+            if hasattr(no_mef, '__iter__') and not isinstance(no_mef, str):
+                no_mef = no_mef[0] if len(no_mef) > 0 else None
+            
+            # Convertir en type Python natif si nécessaire
+            if hasattr(no_mef, 'item'):  # numpy/pandas scalar
+                no_mef = no_mef.item()
+            
             record = {
-                'NO_MEF_LIEU': no_mef,
-                'LATITUDE': row.get('LATITUDE'),
-                'LONGITUDE': row.get('LONGITUDE'),
-                'ADR_CIV_LIEU': row.get('ADR_CIV_LIEU'),
-                'CODE_POST_LIEU': row.get('CODE_POST_LIEU'),
-                'LST_MRC_REG_ADM': row.get('LST_MRC_REG_ADM'),
-                'DESC_MILIEU_RECEPT': row.get('DESC_MILIEU_RECEPT'),
-                'NB_FICHES': row.get('NB_FICHES', 0)
+                'NO_MEF_LIEU': int(no_mef) if no_mef else None,
+                'LATITUDE': float(row.get('LATITUDE')) if pd.notna(row.get('LATITUDE')) else None,
+                'LONGITUDE': float(row.get('LONGITUDE')) if pd.notna(row.get('LONGITUDE')) else None,
+                'ADR_CIV_LIEU': str(row.get('ADR_CIV_LIEU', '')),
+                'CODE_POST_LIEU': str(row.get('CODE_POST_LIEU', '')),
+                'LST_MRC_REG_ADM': str(row.get('LST_MRC_REG_ADM', '')),
+                'DESC_MILIEU_RECEPT': str(row.get('DESC_MILIEU_RECEPT', '')),
+                'NB_FICHES': int(row.get('NB_FICHES', 0)) if pd.notna(row.get('NB_FICHES')) else 0
             }
             
             # Ajouter les détails des fiches si disponibles
-            if not fiches_grouped.empty and (fiches_grouped['NO_MEF_LIEU'] == no_mef).any():
-                fiche_data = fiches_grouped[fiches_grouped['NO_MEF_LIEU'] == no_mef].iloc[0]
+            if no_mef in fiches_dict:
+                fiche_data = fiches_dict[no_mef]
+                record['NO_SEQ_DOSSIER'] = str(fiche_data.get('NO_SEQ_DOSSIER', ''))
+                record['ETAT_REHAB'] = str(fiche_data.get('ETAT_REHAB', ''))
+                record['QUAL_SOLS_AV'] = str(fiche_data.get('QUAL_SOLS_AV', ''))
+                record['QUAL_SOLS'] = str(fiche_data.get('QUAL_SOLS', ''))
+                record['CONTAM_SOL_EXTRA'] = str(fiche_data.get('CONTAM_SOL_EXTRA', ''))
+                record['CONTAM_EAU_EXTRA'] = str(fiche_data.get('CONTAM_EAU_EXTRA', ''))
                 
-                record['NO_SEQ_DOSSIER'] = fiche_data.get('NO_SEQ_DOSSIER', '')
-                record['ETAT_REHAB'] = fiche_data.get('ETAT_REHAB', '')
-                record['QUAL_SOLS_AV'] = fiche_data.get('QUAL_SOLS_AV', '')
-                record['QUAL_SOLS'] = fiche_data.get('QUAL_SOLS', '')
-                record['CONTAM_SOL_EXTRA'] = fiche_data.get('CONTAM_SOL_EXTRA', '')
-                record['CONTAM_EAU_EXTRA'] = fiche_data.get('CONTAM_EAU_EXTRA', '')
-                record['DATE_CRE_MAJ'] = str(fiche_data.get('DATE_CRE_MAJ', ''))
+                date_val = fiche_data.get('DATE_CRE_MAJ')
+                if pd.notna(date_val):
+                    if hasattr(date_val, 'strftime'):
+                        record['DATE_CRE_MAJ'] = date_val.strftime('%Y-%m-%d')
+                    else:
+                        record['DATE_CRE_MAJ'] = str(date_val)
+                else:
+                    record['DATE_CRE_MAJ'] = ''
                 
                 # Générer les URLs des fiches
-                dossiers = str(record['NO_SEQ_DOSSIER']).split(', ')
+                dossiers = record['NO_SEQ_DOSSIER'].split(', ')
                 record['FICHES_URLS'] = [
-                    f"https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no={d}"
-                    for d in dossiers if d and d != 'nan'
+                    f"https://www.environnement.gouv.qc.ca/sol/terrains/terrains-contamines/fiche.asp?no={d.strip()}"
+                    for d in dossiers if d and d.strip() and d.strip() != 'nan'
                 ]
                 
                 # Vérifier si décontaminé
-                record['IS_DECONTAMINATED'] = 'Terminée' in str(record['ETAT_REHAB'])
+                record['IS_DECONTAMINATED'] = 'Terminée' in record['ETAT_REHAB']
             else:
                 # Valeurs par défaut si pas de fiches
                 record['NO_SEQ_DOSSIER'] = ''
@@ -231,10 +254,19 @@ def filter_valdor_data(gpkg_path):
                 record['FICHES_URLS'] = []
                 record['IS_DECONTAMINATED'] = False
             
-            # Convertir les valeurs None en string vide et les types non-JSON
+            # Nettoyer les valeurs None et NaN
             for key, value in record.items():
                 if pd.isna(value) or value is None:
-                    record[key] = ''
+                    if key in ['FICHES_URLS']:
+                        record[key] = []
+                    elif key in ['IS_DECONTAMINATED']:
+                        record[key] = False
+                    elif key in ['LATITUDE', 'LONGITUDE']:
+                        record[key] = 0.0
+                    elif key in ['NO_MEF_LIEU', 'NB_FICHES']:
+                        record[key] = 0
+                    else:
+                        record[key] = ''
                 elif isinstance(value, (list, dict, bool)):
                     pass  # Garder tel quel
                 elif not isinstance(value, (int, float, str)):
@@ -247,7 +279,10 @@ def filter_valdor_data(gpkg_path):
         return data_list
     except Exception as e:
         logger.error(f"❌ Erreur filtrage données: {e}")
+        import traceback
+        traceback.print_exc()
         raise
+
 
 
 def load_existing_data(db):

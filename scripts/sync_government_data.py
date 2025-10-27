@@ -199,16 +199,22 @@ def filter_valdor_data(gpkg_path):
             }
             
             # Ajouter les détails des fiches si disponibles
-            if not fiches_grouped.empty and (fiches_grouped['NO_MEF_LIEU'] == no_mef).any():
-                fiche_data = fiches_grouped[fiches_grouped['NO_MEF_LIEU'] == no_mef].iloc[0]
-                
-                record['NO_SEQ_DOSSIER'] = fiche_data.get('NO_SEQ_DOSSIER', '')
-                record['ETAT_REHAB'] = fiche_data.get('ETAT_REHAB', '')
-                record['QUAL_SOLS_AV'] = fiche_data.get('QUAL_SOLS_AV', '')
-                record['QUAL_SOLS'] = fiche_data.get('QUAL_SOLS', '')
-                record['CONTAM_SOL_EXTRA'] = fiche_data.get('CONTAM_SOL_EXTRA', '')
-                record['CONTAM_EAU_EXTRA'] = fiche_data.get('CONTAM_EAU_EXTRA', '')
-                record['DATE_CRE_MAJ'] = str(fiche_data.get('DATE_CRE_MAJ', ''))
+            # Check if fiches_grouped is not empty and contains the NO_MEF_LIEU value
+            fiche_match = None
+            if not fiches_grouped.empty and 'NO_MEF_LIEU' in fiches_grouped.columns:
+                # Use boolean indexing to find matching rows
+                matching_rows = fiches_grouped[fiches_grouped['NO_MEF_LIEU'] == no_mef]
+                if not matching_rows.empty:
+                    fiche_match = matching_rows.iloc[0]
+            
+            if fiche_match is not None:
+                record['NO_SEQ_DOSSIER'] = fiche_match.get('NO_SEQ_DOSSIER', '')
+                record['ETAT_REHAB'] = fiche_match.get('ETAT_REHAB', '')
+                record['QUAL_SOLS_AV'] = fiche_match.get('QUAL_SOLS_AV', '')
+                record['QUAL_SOLS'] = fiche_match.get('QUAL_SOLS', '')
+                record['CONTAM_SOL_EXTRA'] = fiche_match.get('CONTAM_SOL_EXTRA', '')
+                record['CONTAM_EAU_EXTRA'] = fiche_match.get('CONTAM_EAU_EXTRA', '')
+                record['DATE_CRE_MAJ'] = str(fiche_match.get('DATE_CRE_MAJ', ''))
                 
                 # Générer les URLs des fiches
                 dossiers = str(record['NO_SEQ_DOSSIER']).split(', ')

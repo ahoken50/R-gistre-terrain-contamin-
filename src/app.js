@@ -208,25 +208,6 @@ async function loadGovernmentData() {
 function compareAndCategorizeData() {
     console.log('🔍 Comparaison et catégorisation des données...');
     
-    // DEBUG: Voir les colonnes des données gouvernementales
-    if (governmentData.length > 0) {
-        const columns = Object.keys(governmentData[0]);
-        console.log('📋 Colonnes données gouvernementales:', columns.join(', '));
-        const firstItem = governmentData[0];
-        
-        // Essayer tous les noms de colonnes possibles pour l'adresse
-        let adresseGouv = null;
-        for (const col of columns) {
-            if (col.toLowerCase().includes('adresse') || col.toLowerCase().includes('address')) {
-                adresseGouv = firstItem[col];
-                console.log(`📋 Colonne adresse trouvée: "${col}" = "${adresseGouv}"`);
-                break;
-            }
-        }
-        
-        console.log('📋 Premier terrain gouv complet:', firstItem);
-    }
-    
     // Extraire toutes les adresses gouvernementales (avec tous noms de colonnes possibles)
     const officialAddresses = governmentData.map(item => {
         // Priorité 1: ADR_CIV_LIEU (colonne standard du registre gouvernemental)

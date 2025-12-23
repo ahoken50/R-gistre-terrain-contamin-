@@ -17,6 +17,24 @@ import {
 // Base URL pour les chemins (fonctionne en dev et prod avec GitHub Pages)
 const BASE_URL = import.meta.env.BASE_URL;
 
+/**
+ * Utility: Debounce function to limit the rate at which a function can fire.
+ * @param {Function} func The function to debounce
+ * @param {number} wait The delay in milliseconds
+ * @returns {Function} The debounced function
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // Variables globales pour stocker les données
 let municipalData = [];
 let governmentData = [];
@@ -566,6 +584,9 @@ function displayDataInTable(table, data) {
     // Ordre des colonnes pour les données municipales
     const columnOrder = ['adresse', 'lot', 'reference', 'avis_decontamination', 'bureau_publicite', 'commentaires'];
     
+    // ⚡ Bolt: Use DocumentFragment to batch DOM insertions
+    const fragment = document.createDocumentFragment();
+
     data.forEach(item => {
         const row = document.createElement('tr');
         
@@ -576,8 +597,10 @@ function displayDataInTable(table, data) {
             row.appendChild(cell);
         });
         
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
+
+    tbody.appendChild(fragment);
 }
 
 /**
@@ -614,6 +637,9 @@ function displayGovernmentData(table, data) {
         return;
     }
     
+    // ⚡ Bolt: Use DocumentFragment to batch DOM insertions
+    const fragment = document.createDocumentFragment();
+
     data.forEach(item => {
         const row = document.createElement('tr');
         
@@ -746,8 +772,10 @@ function displayGovernmentData(table, data) {
         }
         row.appendChild(consultCell);
         
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
+
+    tbody.appendChild(fragment);
 }
 
 /**
@@ -806,6 +834,9 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
         tbody.appendChild(row);
         return;
     }
+
+    // ⚡ Bolt: Use DocumentFragment to batch DOM insertions
+    const fragment = document.createDocumentFragment();
     
     data.forEach((item, index) => {
         const row = document.createElement('tr');
@@ -898,8 +929,10 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
             row.appendChild(actionsCell);
         }
         
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
+
+    tbody.appendChild(fragment);
 }
 
 /**
@@ -1878,14 +1911,17 @@ async function initializeApp() {
         // Calculer les statistiques de décontamination
         calculateDecontaminationStats();
         
-        // Ajouter les écouteurs d'événements pour les filtres
-        addressFilter.addEventListener('input', filterMunicipalData);
-        lotFilter.addEventListener('input', filterMunicipalData);
-        referenceFilter.addEventListener('input', filterMunicipalData);
+        // Ajouter les écouteurs d'événements pour les filtres (avec debounce pour la performance)
+        const debouncedFilterMunicipal = debounce(filterMunicipalData, 300);
+        const debouncedFilterGovernment = debounce(filterGovernmentData, 300);
+
+        addressFilter.addEventListener('input', debouncedFilterMunicipal);
+        lotFilter.addEventListener('input', debouncedFilterMunicipal);
+        referenceFilter.addEventListener('input', debouncedFilterMunicipal);
         
-        governmentAddressFilter.addEventListener('input', filterGovernmentData);
-        governmentLotFilter.addEventListener('input', filterGovernmentData);
-        governmentReferenceFilter.addEventListener('input', filterGovernmentData);
+        governmentAddressFilter.addEventListener('input', debouncedFilterGovernment);
+        governmentLotFilter.addEventListener('input', debouncedFilterGovernment);
+        governmentReferenceFilter.addEventListener('input', debouncedFilterGovernment);
         
         // Ajouter les écouteurs pour les filtres décontaminés (Phase 2)
         const decontaminatedAddressFilter = document.getElementById('decontaminated-address-filter');
@@ -1893,7 +1929,7 @@ async function initializeApp() {
         const decontaminatedStatusFilter = document.getElementById('decontaminated-status-filter');
         
         if (decontaminatedAddressFilter) {
-            decontaminatedAddressFilter.addEventListener('input', filterDecontaminatedData);
+            decontaminatedAddressFilter.addEventListener('input', debounce(filterDecontaminatedData, 300));
         }
         if (decontaminatedYearFilter) {
             decontaminatedYearFilter.addEventListener('change', filterDecontaminatedData);

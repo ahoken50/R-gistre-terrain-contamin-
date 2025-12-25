@@ -563,6 +563,9 @@ function displayDataInTable(table, data) {
         return;
     }
     
+    // Optimization: Use DocumentFragment to batch DOM insertions
+    const fragment = document.createDocumentFragment();
+
     // Ordre des colonnes pour les données municipales
     const columnOrder = ['adresse', 'lot', 'reference', 'avis_decontamination', 'bureau_publicite', 'commentaires'];
     
@@ -576,8 +579,10 @@ function displayDataInTable(table, data) {
             row.appendChild(cell);
         });
         
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
+
+    tbody.appendChild(fragment);
 }
 
 /**
@@ -614,6 +619,9 @@ function displayGovernmentData(table, data) {
         return;
     }
     
+    // Optimization: Use DocumentFragment to batch DOM insertions
+    const fragment = document.createDocumentFragment();
+
     data.forEach(item => {
         const row = document.createElement('tr');
         
@@ -746,8 +754,10 @@ function displayGovernmentData(table, data) {
         }
         row.appendChild(consultCell);
         
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
+
+    tbody.appendChild(fragment);
 }
 
 /**
@@ -807,6 +817,9 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
         return;
     }
     
+    // Optimization: Use DocumentFragment to batch DOM insertions
+    const fragment = document.createDocumentFragment();
+
     data.forEach((item, index) => {
         const row = document.createElement('tr');
         
@@ -898,8 +911,10 @@ function displayDecontaminatedData(table, data, showValidationButtons = false) {
             row.appendChild(actionsCell);
         }
         
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
+
+    tbody.appendChild(fragment);
 }
 
 /**

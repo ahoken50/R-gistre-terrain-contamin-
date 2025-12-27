@@ -1466,6 +1466,29 @@ function calculateDecontaminationStats() {
 }
 
 /**
+ * Gérer l'état de chargement pour les actions d'export
+ */
+async function handleExportAction(button, actionFn) {
+    if (!button) return;
+
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Génération...';
+
+    try {
+        await actionFn();
+    } catch (error) {
+        console.error("Erreur lors de l'export:", error);
+        showNotification('Une erreur est survenue lors de la génération du document.', 'danger');
+    } finally {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.innerHTML = originalText;
+    }
+}
+
+/**
  * Ajouter le logo et l'en-tête officiel au PDF (format paysage)
  */
 async function addPDFHeader(doc, title) {
@@ -1904,14 +1927,15 @@ async function initializeApp() {
         
         // Ajouter les écouteurs d'événements pour les exports PDF
         exportPdfMunicipalBtn.addEventListener('click', () => 
-            exportTableToPDF(municipalTable, 'Terrains_Contamines_Municipaux'));
+            handleExportAction(exportPdfMunicipalBtn, () => exportTableToPDF(municipalTable, 'Terrains_Contamines_Municipaux')));
         exportPdfGovernmentBtn.addEventListener('click', () => 
-            exportTableToPDF(governmentTable, 'Repertoire_Officiel_Gouvernemental'));
+            handleExportAction(exportPdfGovernmentBtn, () => exportTableToPDF(governmentTable, 'Repertoire_Officiel_Gouvernemental')));
         exportPdfDecontaminatedBtn.addEventListener('click', () => 
-            exportTableToPDF(decontaminatedTable, 'Terrains_Decontamines_Archives'));
+            handleExportAction(exportPdfDecontaminatedBtn, () => exportTableToPDF(decontaminatedTable, 'Terrains_Decontamines_Archives')));
         
         // Ajouter l'écouteur d'événement pour la génération de rapport
-        generateReportBtn.addEventListener('click', generateAccessReport);
+        generateReportBtn.addEventListener('click', () =>
+            handleExportAction(generateReportBtn, generateAccessReport));
         
         // Ajouter l'écouteur pour le bouton de synchronisation
         if (syncGovernmentBtn) {

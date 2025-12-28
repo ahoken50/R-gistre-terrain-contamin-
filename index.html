@@ -253,14 +253,19 @@
                 <div class="filter-section">
                     <h5>Filtres</h5>
                     <div class="row">
-                        <div class="col-md-4">
-                            <input type="text" id="address-filter" class="form-control" placeholder="Filtrer par adresse" aria-label="Filtrer par adresse">
+                        <div class="col-md-3">
+                            <input type="search" id="address-filter" class="form-control" placeholder="Filtrer par adresse" aria-label="Filtrer par adresse">
                         </div>
-                        <div class="col-md-4">
-                            <input type="text" id="lot-filter" class="form-control" placeholder="Filtrer par lot" aria-label="Filtrer par lot">
+                        <div class="col-md-3">
+                            <input type="search" id="lot-filter" class="form-control" placeholder="Filtrer par lot" aria-label="Filtrer par lot">
                         </div>
-                        <div class="col-md-4">
-                            <input type="text" id="reference-filter" class="form-control" placeholder="Filtrer par référence" aria-label="Filtrer par référence">
+                        <div class="col-md-3">
+                            <input type="search" id="reference-filter" class="form-control" placeholder="Filtrer par référence" aria-label="Filtrer par référence">
+                        </div>
+                        <div class="col-md-3">
+                            <button id="reset-municipal-filters" class="btn btn-outline-secondary w-100">
+                                🔄 Réinitialiser les filtres
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -305,14 +310,19 @@
                 <div class="filter-section">
                     <h5>Filtres</h5>
                     <div class="row">
-                        <div class="col-md-4">
-                            <input type="text" id="government-address-filter" class="form-control" placeholder="Filtrer par adresse" aria-label="Filtrer par adresse">
+                        <div class="col-md-3">
+                            <input type="search" id="government-address-filter" class="form-control" placeholder="Filtrer par adresse" aria-label="Filtrer par adresse">
                         </div>
-                        <div class="col-md-4">
-                            <input type="text" id="government-lot-filter" class="form-control" placeholder="Filtrer par lot" aria-label="Filtrer par lot">
+                        <div class="col-md-3">
+                            <input type="search" id="government-lot-filter" class="form-control" placeholder="Filtrer par lot" aria-label="Filtrer par lot">
                         </div>
-                        <div class="col-md-4">
-                            <input type="text" id="government-reference-filter" class="form-control" placeholder="Filtrer par référence" aria-label="Filtrer par référence">
+                        <div class="col-md-3">
+                            <input type="search" id="government-reference-filter" class="form-control" placeholder="Filtrer par référence" aria-label="Filtrer par référence">
+                        </div>
+                        <div class="col-md-3">
+                            <button id="reset-government-filters" class="btn btn-outline-secondary w-100">
+                                🔄 Réinitialiser les filtres
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -408,7 +418,7 @@
                     <h5>Filtres</h5>
                     <div class="row">
                         <div class="col-md-3">
-                            <input type="text" id="decontaminated-address-filter" 
+                            <input type="search" id="decontaminated-address-filter"
                                    class="form-control" placeholder="Filtrer par adresse" aria-label="Filtrer par adresse">
                         </div>
                         <div class="col-md-3">
@@ -430,7 +440,7 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-outline-secondary w-100" onclick="location.reload()">
+                            <button id="reset-decontaminated-filters" class="btn btn-outline-secondary w-100">
                                 🔄 Réinitialiser les filtres
                             </button>
                         </div>

@@ -1193,6 +1193,16 @@ function filterMunicipalData() {
 }
 
 /**
+ * Réinitialiser les filtres municipaux
+ */
+function resetMunicipalFilters() {
+    addressFilter.value = '';
+    lotFilter.value = '';
+    referenceFilter.value = '';
+    filterMunicipalData();
+}
+
+/**
  * Filtrer les données gouvernementales
  */
 function filterGovernmentData() {
@@ -1211,6 +1221,16 @@ function filterGovernmentData() {
     });
     
     displayGovernmentData(governmentTable, filteredData);
+}
+
+/**
+ * Réinitialiser les filtres gouvernementaux
+ */
+function resetGovernmentFilters() {
+    governmentAddressFilter.value = '';
+    governmentLotFilter.value = '';
+    governmentReferenceFilter.value = '';
+    filterGovernmentData();
 }
 
 /**
@@ -1252,6 +1272,21 @@ function filterDecontaminatedData() {
     if (countElement) {
         countElement.textContent = filteredData.length;
     }
+}
+
+/**
+ * Réinitialiser les filtres des terrains décontaminés
+ */
+function resetDecontaminatedFilters() {
+    const addressFilter = document.getElementById('decontaminated-address-filter');
+    const yearFilter = document.getElementById('decontaminated-year-filter');
+    const statusFilter = document.getElementById('decontaminated-status-filter');
+
+    if (addressFilter) addressFilter.value = '';
+    if (yearFilter) yearFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+
+    filterDecontaminatedData();
 }
 
 /**
@@ -1941,6 +1976,17 @@ async function initializeApp() {
         governmentAddressFilter.addEventListener('input', debouncedFilterGovernmentData);
         governmentLotFilter.addEventListener('input', debouncedFilterGovernmentData);
         governmentReferenceFilter.addEventListener('input', debouncedFilterGovernmentData);
+
+        // Ajouter les écouteurs pour les boutons de réinitialisation
+        const resetMunicipalBtn = document.getElementById('reset-municipal-filters');
+        if (resetMunicipalBtn) {
+            resetMunicipalBtn.addEventListener('click', resetMunicipalFilters);
+        }
+
+        const resetGovernmentBtn = document.getElementById('reset-government-filters');
+        if (resetGovernmentBtn) {
+            resetGovernmentBtn.addEventListener('click', resetGovernmentFilters);
+        }
         
         // Ajouter les écouteurs pour les filtres décontaminés (Phase 2)
         const decontaminatedAddressFilter = document.getElementById('decontaminated-address-filter');
@@ -1955,6 +2001,11 @@ async function initializeApp() {
         }
         if (decontaminatedStatusFilter) {
             decontaminatedStatusFilter.addEventListener('change', filterDecontaminatedData);
+        }
+
+        const resetDecontaminatedBtn = document.getElementById('reset-decontaminated-filters');
+        if (resetDecontaminatedBtn) {
+            resetDecontaminatedBtn.addEventListener('click', resetDecontaminatedFilters);
         }
         
         // Ajouter les écouteurs d'événements pour les exports PDF

@@ -602,6 +602,21 @@ function formatNumber(num) {
 }
 
 /**
+ * Debounce function to limit the rate at which a function can fire.
+ * @param {Function} func The function to debounce.
+ * @param {number} wait The delay in milliseconds.
+ * @returns {Function} The debounced function.
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
+/**
  * Afficher les données gouvernementales avec les bonnes colonnes
  */
 function displayGovernmentData(table, data) {
@@ -1917,13 +1932,15 @@ async function initializeApp() {
         calculateDecontaminationStats();
         
         // Ajouter les écouteurs d'événements pour les filtres
-        addressFilter.addEventListener('input', filterMunicipalData);
-        lotFilter.addEventListener('input', filterMunicipalData);
-        referenceFilter.addEventListener('input', filterMunicipalData);
+        const debouncedFilterMunicipalData = debounce(filterMunicipalData, 300);
+        addressFilter.addEventListener('input', debouncedFilterMunicipalData);
+        lotFilter.addEventListener('input', debouncedFilterMunicipalData);
+        referenceFilter.addEventListener('input', debouncedFilterMunicipalData);
         
-        governmentAddressFilter.addEventListener('input', filterGovernmentData);
-        governmentLotFilter.addEventListener('input', filterGovernmentData);
-        governmentReferenceFilter.addEventListener('input', filterGovernmentData);
+        const debouncedFilterGovernmentData = debounce(filterGovernmentData, 300);
+        governmentAddressFilter.addEventListener('input', debouncedFilterGovernmentData);
+        governmentLotFilter.addEventListener('input', debouncedFilterGovernmentData);
+        governmentReferenceFilter.addEventListener('input', debouncedFilterGovernmentData);
         
         // Ajouter les écouteurs pour les filtres décontaminés (Phase 2)
         const decontaminatedAddressFilter = document.getElementById('decontaminated-address-filter');
@@ -1931,7 +1948,7 @@ async function initializeApp() {
         const decontaminatedStatusFilter = document.getElementById('decontaminated-status-filter');
         
         if (decontaminatedAddressFilter) {
-            decontaminatedAddressFilter.addEventListener('input', filterDecontaminatedData);
+            decontaminatedAddressFilter.addEventListener('input', debounce(filterDecontaminatedData, 300));
         }
         if (decontaminatedYearFilter) {
             decontaminatedYearFilter.addEventListener('change', filterDecontaminatedData);

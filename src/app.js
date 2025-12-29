@@ -493,7 +493,10 @@ function identifyDecontaminatedLands(officialReferences) {
     console.log(`  - Par adresse: ${govTerrainMapByAddress.size} entrées`);
     
     municipalData.forEach((item, index) => {
-        const itemId = `${item.adresse}_${item.lot}`;
+        // Utiliser getColumnValue pour supporter différents noms de colonnes pour l'ID
+        const adresse = getColumnValue(item, 'adresse', 'address', 'Adresse', 'ADRESSE') || '';
+        const lot = getColumnValue(item, 'lot', 'numero_de_lot', 'Lot', 'LOT') || '';
+        const itemId = `${adresse}_${lot}`;
         
         // Si déjà rejeté, ignorer
         if (rejectedIds.includes(itemId)) {
@@ -541,12 +544,12 @@ function identifyDecontaminatedLands(officialReferences) {
         let govTerrain = hadReference ? govTerrainMapByRef.get(referenceStr.toLowerCase()) : null;
            
            // Si pas trouvé par référence, chercher par adresse
-           if (!govTerrain && item.adresse) {
-               const normalizedMunicipalAddr = normalizeAddress(item.adresse);
+           if (!govTerrain && adresse) {
+               const normalizedMunicipalAddr = normalizeAddress(adresse);
                const matchingTerrains = govTerrainMapByAddress.get(normalizedMunicipalAddr);
                if (matchingTerrains && matchingTerrains.length > 0) {
                    govTerrain = matchingTerrains[0]; // Prendre le premier match
-                   console.log(`🔗 Match par adresse: "${item.adresse}" → "${govTerrain.ADR_CIV_LIEU}"`);
+                   console.log(`🔗 Match par adresse: "${adresse}" → "${govTerrain.ADR_CIV_LIEU}"`);
                }
            }
         const isDecontaminatedInGov = govTerrain && govTerrain.IS_DECONTAMINATED === true;

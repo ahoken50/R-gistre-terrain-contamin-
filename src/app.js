@@ -216,8 +216,6 @@ async function loadGovernmentData() {
  * Comparer les données et identifier les catégories
  */
 function compareAndCategorizeData() {
-    console.log('🔍 Comparaison et catégorisation des données...');
-    
     // Extraire toutes les adresses gouvernementales (avec tous noms de colonnes possibles)
     const officialAddresses = governmentData.map(item => {
         // Priorité 1: ADR_CIV_LIEU (colonne standard du registre gouvernemental)
@@ -241,18 +239,8 @@ function compareAndCategorizeData() {
         }).filter(ref => ref !== '')
     );
     
-    console.log(`📋 Total adresses gouvernementales: ${officialAddresses.length}`);
-    console.log(`📋 Total références gouvernementales: ${officialReferences.size}`);
-    console.log('📋 Échantillon adresses gouvernementales:', officialAddresses.slice(0, 3));
-    
     // Identifier automatiquement les terrains potentiellement décontaminés
     identifyDecontaminatedLands(officialReferences);
-    
-    console.log(`📋 Catégorisation terminée :`);
-    console.log(`  - Terrains municipaux: ${municipalData.length}`);
-    console.log(`  - Terrains gouvernementaux: ${governmentData.length}`);
-    console.log(`  - Terrains décontaminés validés: ${decontaminatedData.length}`);
-    console.log(`  - Terrains en attente de validation: ${pendingDecontaminatedData.length}`);
 }
 
 /**
@@ -617,19 +605,6 @@ function identifyDecontaminatedLands(officialReferences) {
     console.log(`✅ Détection terminée:`);
     console.log(`  - ${decontaminatedData.length} terrains décontaminés validés`);
     console.log(`  - ${pendingDecontaminatedData.length} terrains en attente de validation`);
-    
-    // DEBUG: Afficher les IDs validés vs détectés
-    if (decontaminatedData.length === 0 && validatedIds.length > 0) {
-        console.warn(`⚠️ PROBLÈME: ${validatedIds.length} IDs validés dans localStorage mais 0 terrains dans decontaminatedData!`);
-        console.warn('IDs validés:', validatedIds);
-        console.warn('ItemIds des terrains municipaux (premiers 5):', 
-            municipalData.slice(0, 5).map(item => {
-                const adresse = getColumnValue(item, 'adresse', 'address') || '';
-                const lot = getColumnValue(item, 'lot', 'numero_de_lot') || '';
-                return `${adresse}_${lot}`;
-            })
-        );
-    }
 }
 
 /**

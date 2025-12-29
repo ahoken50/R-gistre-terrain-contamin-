@@ -66,6 +66,8 @@ async function loadMunicipalData() {
         
         if (firebaseData && firebaseData.length > 0) {
             municipalData = firebaseData;
+            // Pre-process data immediately after loading
+            preprocessMunicipalData(municipalData);
             console.log(`✅ ${municipalData.length} enregistrements municipaux chargés depuis Firebase`);
             return municipalData;
         }
@@ -81,6 +83,9 @@ async function loadMunicipalData() {
         const jsonData = await response.json();
         municipalData = jsonData.data || jsonData;
         
+        // Pre-process data immediately after loading
+        preprocessMunicipalData(municipalData);
+
         // Sauvegarder dans Firebase pour la prochaine fois
         if (municipalData.length > 0) {
             await saveMunicipalDataToFirebase(municipalData);
@@ -140,6 +145,8 @@ async function loadGovernmentData() {
         
         if (firebaseData && firebaseData.length > 0) {
             governmentData = firebaseData;
+            // Pre-process data immediately after loading
+            preprocessGovernmentData(governmentData);
             console.log(`✅ ${governmentData.length} enregistrements gouvernementaux chargés depuis Firebase`);
             
             // Mettre à jour la date de dernière mise à jour
@@ -168,6 +175,9 @@ async function loadGovernmentData() {
             console.error('❌ governmentData n\'est pas un tableau:', typeof governmentData);
             governmentData = [];
         }
+
+        // Pre-process data immediately after loading
+        preprocessGovernmentData(governmentData);
         
         // Sauvegarder dans Firebase pour la prochaine fois
         if (governmentData.length > 0) {
@@ -257,6 +267,103 @@ function getColumnValue(item, ...possibleNames) {
         }
     }
     return null;
+}
+
+/**
+ * Nettoyer l'état de réhabilitation
+ * @param {string} text - Le texte brut de l'état
+ * @returns {string} Le texte nettoyé
+ */
+function cleanEtatRehab(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/[ØÝø=]/g, '')  // Caractères spéciaux typiques
+        .replace(/['']/g, "'")    // Normaliser apostrophes
+        .replace(/[^a-zA-Z0-9À-ÿ\s'\-()]/g, '')  // Garder seulement lettres, chiffres, accents, espaces, apostrophes normales, tirets et parenthèses
+        .replace(/\s+/g, ' ')     // Enlever espaces multiples
+        .trim();
+}
+
+/**
+ * Prétraiter les données gouvernementales pour optimiser l'affichage et le filtrage
+ * - Nettoie ETAT_REHAB une seule fois
+ * - Normalise les adresses (remplace \n par ,)
+ * - Ajoute des champs de recherche pré-calculés (minuscules)
+ */
+function preprocessGovernmentData(data) {
+    if (!data || !Array.isArray(data)) return;
+
+    data.forEach(item => {
+        // 1. Nettoyer ETAT_REHAB
+        if (item.ETAT_REHAB) {
+            item.ETAT_REHAB = cleanEtatRehab(item.ETAT_REHAB);
+        }
+
+        // 2. Nettoyer les adresses et champs texte pour affichage
+        // Remplacer les retours de ligne par des virgules pour l'affichage tableau
+        // Note: normalizeAddress gère bien les virgules (les enlève), donc pas de souci pour la comparaison
+        if (item.ADR_CIV_LIEU) item.ADR_CIV_LIEU = item.ADR_CIV_LIEU.replace(/\r\n/g, ', ').replace(/\n/g, ', ').trim();
+        // Nettoyer aussi les champs fallback
+        if (item.adresse) item.adresse = item.adresse.replace(/\r\n/g, ', ').replace(/\n/g, ', ').trim();
+        if (item.Adresse) item.Adresse = item.Adresse.replace(/\r\n/g, ', ').replace(/\n/g, ', ').trim();
+
+        if (item.CONTAM_SOL_EXTRA) item.CONTAM_SOL_EXTRA = item.CONTAM_SOL_EXTRA.replace(/\r\n/g, ', ').replace(/\n/g, ', ').trim();
+
+        // 3. Ajouter champs de recherche pré-calculés (lowercase)
+        // Cela évite de faire .toString().toLowerCase() sur chaque item à chaque filtre
+        // Utiliser Object.defineProperty pour rendre ces champs non-énumérables
+        // (ils ne seront pas sauvegardés dans Firebase ou JSON)
+
+        Object.defineProperty(item, '_search_adresse', {
+            value: (item.Adresse || item.adresse || item.ADR_CIV_LIEU || '').toString().toLowerCase(),
+            writable: true,
+            enumerable: false
+        });
+
+        Object.defineProperty(item, '_search_lot', {
+            value: (item.Lot || item.lot || '').toString().toLowerCase(),
+            writable: true,
+            enumerable: false
+        });
+
+        // Concaténer toutes les références possibles pour la recherche
+        const ref1 = (item.Reference || item.reference || '').toString().toLowerCase();
+        const ref2 = (item.ID || '').toString().toLowerCase();
+        const ref3 = (item.NO_MEF_LIEU || '').toString().toLowerCase();
+
+        Object.defineProperty(item, '_search_ref', {
+            value: `${ref1} ${ref2} ${ref3}`.trim(),
+            writable: true,
+            enumerable: false
+        });
+    });
+}
+
+/**
+ * Prétraiter les données municipales pour optimiser le filtrage
+ */
+function preprocessMunicipalData(data) {
+    if (!data || !Array.isArray(data)) return;
+
+    data.forEach(item => {
+        Object.defineProperty(item, '_search_adresse', {
+            value: (item.adresse || item.Adresse || '').toString().toLowerCase(),
+            writable: true,
+            enumerable: false
+        });
+
+        Object.defineProperty(item, '_search_lot', {
+            value: (item.lot || item.Lot || '').toString().toLowerCase(),
+            writable: true,
+            enumerable: false
+        });
+
+        Object.defineProperty(item, '_search_ref', {
+            value: (item.reference || item.Reference || '').toString().toLowerCase(),
+            writable: true,
+            enumerable: false
+        });
+    });
 }
 
 /**
@@ -490,6 +597,9 @@ function identifyDecontaminatedLands(officialReferences) {
                 _gov_etat_rehab: govTerrain ? govTerrain.ETAT_REHAB : null,
                 _gov_fiches_urls: govTerrain ? govTerrain.FICHES_URLS : null
             };
+
+            // Transférer les propriétés de recherche (qui ne sont pas copiées par le spread car non-énumérables)
+            if (item._search_adresse) enrichedItem._search_adresse = item._search_adresse;
             
             // Si déjà validé, ajouter à la liste validée
             if (validatedIds.includes(itemId)) {
@@ -647,10 +757,12 @@ function displayGovernmentData(table, data) {
         
         // Colonne 2: Adresse
         const addrCell = document.createElement('td');
-        const cleanAddr = cleanAddress(item.ADR_CIV_LIEU || item.adresse || item.Adresse || '');
-        addrCell.textContent = cleanAddr;
-        if (cleanAddr.length > 50) {
-            addrCell.title = cleanAddr;
+        // Utiliser directement la valeur car elle est déjà nettoyée dans preprocessGovernmentData
+        // cleanAddress est redondant ici pour ADR_CIV_LIEU car nous avons déjà remplacé les \n
+        const displayAddr = item.ADR_CIV_LIEU || item.adresse || item.Adresse || '';
+        addrCell.textContent = displayAddr;
+        if (displayAddr.length > 50) {
+            addrCell.title = displayAddr;
             addrCell.style.cursor = 'help';
         }
         row.appendChild(addrCell);
@@ -662,18 +774,8 @@ function displayGovernmentData(table, data) {
         
         // Colonne 4: État de réhabilitation avec badge
         const etatCell = document.createElement('td');
+        // Valeur déjà nettoyée dans preprocessGovernmentData
         let etatRehab = item.ETAT_REHAB || '';
-        
-        // Nettoyer les caractères spéciaux et garder seulement texte/années
-        if (etatRehab) {
-            // Enlever les caractères spéciaux comme Ø=Ý, apostrophes étranges, etc.
-            etatRehab = etatRehab
-                .replace(/[ØÝø=]/g, '')  // Caractères spéciaux typiques
-                .replace(/['']/g, "'")    // Normaliser apostrophes
-                .replace(/[^a-zA-Z0-9À-ÿ\s'\-()]/g, '')  // Garder seulement lettres, chiffres, accents, espaces, apostrophes normales, tirets et parenthèses
-                .replace(/\s+/g, ' ')     // Enlever espaces multiples
-                .trim();
-        }
         
         if (etatRehab) {
             // Créer un badge selon l'état
@@ -716,12 +818,11 @@ function displayGovernmentData(table, data) {
         
         // Colonne 7: Contaminants (Sol)
         const contamCell = document.createElement('td');
+        // Déjà nettoyé dans preprocessGovernmentData (remplacement des \n)
         const contaminants = item.CONTAM_SOL_EXTRA || '';
         if (contaminants) {
             // Nettoyer et formater les contaminants
             const contamList = contaminants
-                .replace(/\r\n/g, ', ')
-                .replace(/\n/g, ', ')
                 .split(',')
                 .map(c => c.trim())
                 .filter(c => c.length > 0)
@@ -737,7 +838,7 @@ function displayGovernmentData(table, data) {
             }
             
             // Tooltip avec la liste complète
-            contamDiv.title = contaminants.replace(/\r\n/g, ', ').replace(/\n/g, ', ');
+            contamDiv.title = contaminants;
             contamDiv.style.cursor = 'help';
             
             contamCell.appendChild(contamDiv);
@@ -1180,9 +1281,10 @@ function filterMunicipalData() {
     const referenceValue = referenceFilter.value.toLowerCase();
     
     const filteredData = municipalData.filter(item => {
-        const adresse = (item.adresse || item.Adresse || '').toString().toLowerCase();
-        const lot = (item.lot || item.Lot || '').toString().toLowerCase();
-        const reference = (item.reference || item.Reference || '').toString().toLowerCase();
+        // Utilisation des champs pré-calculés pour la performance
+        const adresse = item._search_adresse || (item.adresse || item.Adresse || '').toString().toLowerCase();
+        const lot = item._search_lot || (item.lot || item.Lot || '').toString().toLowerCase();
+        const reference = item._search_ref || (item.reference || item.Reference || '').toString().toLowerCase();
         
         return adresse.includes(addressValue) &&
                lot.includes(lotValue) &&
@@ -1201,9 +1303,10 @@ function filterGovernmentData() {
     const referenceValue = governmentReferenceFilter.value.toLowerCase();
     
     const filteredData = governmentData.filter(item => {
-        const adresse = (item.Adresse || item.adresse || '').toString().toLowerCase();
-        const lot = (item.Lot || item.lot || '').toString().toLowerCase();
-        const reference = (item.Reference || item.reference || item.ID || item.NO_MEF_LIEU || '').toString().toLowerCase();
+        // Utilisation des champs pré-calculés pour la performance
+        const adresse = item._search_adresse || (item.Adresse || item.adresse || '').toString().toLowerCase();
+        const lot = item._search_lot || (item.Lot || item.lot || '').toString().toLowerCase();
+        const reference = item._search_ref || (item.Reference || item.reference || item.ID || item.NO_MEF_LIEU || '').toString().toLowerCase();
         
         return adresse.includes(addressValue) &&
                lot.includes(lotValue) &&
@@ -1228,7 +1331,7 @@ function filterDecontaminatedData() {
     const statusValue = statusFilter.value;
     
     const filteredData = decontaminatedData.filter(item => {
-        const adresse = (item.adresse || '').toString().toLowerCase();
+        const adresse = item._search_adresse || (item.adresse || '').toString().toLowerCase();
         const matchAddress = adresse.includes(addressValue);
         
         let matchYear = true;
@@ -1376,6 +1479,9 @@ function filterDecontaminatedData() {
            
            // 4. Mettre à jour les données globales
            governmentData = newData;
+
+           // Pre-process data immediately after update
+           preprocessGovernmentData(governmentData);
            
            // 5. Sauvegarder dans Firebase avec métadonnées de synchronisation
            await saveGovernmentDataToFirebase(governmentData);

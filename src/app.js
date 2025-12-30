@@ -1990,9 +1990,12 @@ async function initializeApp() {
         }
         
         // Charger les données depuis Firebase
-        await loadValidations();  // Charger d'abord les validations
-        await loadMunicipalData();
-        await loadGovernmentData();
+        // ⚡ Bolt: Charger les données en parallèle pour réduire le temps de chargement initial
+        await Promise.all([
+            loadValidations(),
+            loadMunicipalData(),
+            loadGovernmentData()
+        ]);
         
         // Comparer et catégoriser
         compareAndCategorizeData();

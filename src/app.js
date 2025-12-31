@@ -2043,6 +2043,17 @@ async function initializeApp() {
         if (decontaminatedStatusFilter) {
             decontaminatedStatusFilter.addEventListener('change', filterDecontaminatedData);
         }
+
+        // Ajouter l'écouteur pour le bouton de réinitialisation des filtres
+        const resetDecontaminatedFiltersBtn = document.getElementById('reset-decontaminated-filters');
+        if (resetDecontaminatedFiltersBtn) {
+            resetDecontaminatedFiltersBtn.addEventListener('click', () => {
+                if (decontaminatedAddressFilter) decontaminatedAddressFilter.value = '';
+                if (decontaminatedYearFilter) decontaminatedYearFilter.value = '';
+                if (decontaminatedStatusFilter) decontaminatedStatusFilter.value = '';
+                filterDecontaminatedData();
+            });
+        }
         
         // Ajouter les écouteurs d'événements pour les exports PDF
         exportPdfMunicipalBtn.addEventListener('click', () => 

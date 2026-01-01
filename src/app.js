@@ -2044,6 +2044,17 @@ async function initializeApp() {
             decontaminatedStatusFilter.addEventListener('change', filterDecontaminatedData);
         }
         
+        // Bouton de réinitialisation des filtres décontaminés
+        const resetDecontaminatedBtn = document.getElementById('reset-decontaminated-filters');
+        if (resetDecontaminatedBtn) {
+            resetDecontaminatedBtn.addEventListener('click', () => {
+                if (decontaminatedAddressFilter) decontaminatedAddressFilter.value = '';
+                if (decontaminatedYearFilter) decontaminatedYearFilter.value = '';
+                if (decontaminatedStatusFilter) decontaminatedStatusFilter.value = '';
+                filterDecontaminatedData();
+            });
+        }
+
         // Ajouter les écouteurs d'événements pour les exports PDF
         exportPdfMunicipalBtn.addEventListener('click', () => 
             handleExportAction(exportPdfMunicipalBtn, () => exportTableToPDF(municipalTable, 'Terrains_Contamines_Municipaux')));

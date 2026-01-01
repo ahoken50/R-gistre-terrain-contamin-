@@ -216,22 +216,7 @@ async function loadGovernmentData() {
  * Comparer les données et identifier les catégories
  */
 function compareAndCategorizeData() {
-    // Extraire toutes les adresses gouvernementales (avec tous noms de colonnes possibles)
-    const officialAddresses = governmentData.map(item => {
-        // Priorité 1: ADR_CIV_LIEU (colonne standard du registre gouvernemental)
-        if (item.ADR_CIV_LIEU) {
-            return item.ADR_CIV_LIEU;
-        }
-        // Priorité 2: Chercher la colonne qui contient "adresse" dans son nom
-        for (const key of Object.keys(item)) {
-            if (key.toLowerCase().includes('adresse') || key.toLowerCase().includes('address')) {
-                return item[key] || '';
-            }
-        }
-        return '';
-    }).filter(addr => addr !== '');
-    
-    // Créer aussi un Set des références pour identifyDecontaminatedLands()
+    // Créer un Set des références pour identifyDecontaminatedLands()
     const officialReferences = new Set(
         governmentData.map(item => {
             const ref = item.NO_MEF_LIEU || item.reference || item.Reference || item.ID;
@@ -321,6 +306,14 @@ function preprocessGovernmentData(data) {
 
         Object.defineProperty(item, '_search_ref', {
             value: `${ref1} ${ref2} ${ref3}`.trim(),
+            writable: true,
+            enumerable: false
+        });
+
+        // 4. Pré-calculer l'adresse normalisée pour les comparaisons futures (optimisation)
+        // Ceci évite de recalculer normalizeAddress à chaque validation/rejet
+        Object.defineProperty(item, '_normalized_addr', {
+            value: normalizeAddress(item.ADR_CIV_LIEU || item.adresse || item.Adresse || ''),
             writable: true,
             enumerable: false
         });
@@ -466,9 +459,9 @@ function identifyDecontaminatedLands(officialReferences) {
         }
         
         // Index par adresse normalisée pour cross-référence
-        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
-        if (address) {
-            const normalizedAddr = normalizeAddress(address);
+        // Utiliser la valeur pré-calculée dans preprocessGovernmentData
+        const normalizedAddr = terrain._normalized_addr;
+        if (normalizedAddr) {
             if (!govTerrainMapByAddress.has(normalizedAddr)) {
                 govTerrainMapByAddress.set(normalizedAddr, []);
             }

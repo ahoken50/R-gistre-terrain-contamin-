@@ -1,5 +1,3 @@
-# Bolt's Journal
-
-## 2024-05-23 - Data Loading Optimization
-**Learning:** Initial data loading was sequential (waterfall), causing unnecessary delay. Parallelizing independent Firebase fetches with `Promise.all` is safe because global state updates are atomic in the single-threaded JS event loop.
-**Action:** Always check for independent async operations in initialization flows and batch them.
+## 2024-05-24 - Pre-calculation of Expensive Computations
+**Learning:** Functions like `normalizeAddress` that use multiple regex replacements are expensive when run inside loops (e.g., during validation or filtering). Pre-calculating these values during the initial data load (using `preprocessGovernmentData`) and storing them in non-enumerable properties (`_normalized_addr`) significantly reduces CPU usage during interactive tasks like validation, which triggers re-evaluation of the entire dataset.
+**Action:** Identify expensive property derivations that are constant for a given record and move them to the preprocessing step. Use `Object.defineProperty({ enumerable: false })` to store them without affecting serialization.

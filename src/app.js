@@ -216,31 +216,8 @@ async function loadGovernmentData() {
  * Comparer les données et identifier les catégories
  */
 function compareAndCategorizeData() {
-    // Extraire toutes les adresses gouvernementales (avec tous noms de colonnes possibles)
-    const officialAddresses = governmentData.map(item => {
-        // Priorité 1: ADR_CIV_LIEU (colonne standard du registre gouvernemental)
-        if (item.ADR_CIV_LIEU) {
-            return item.ADR_CIV_LIEU;
-        }
-        // Priorité 2: Chercher la colonne qui contient "adresse" dans son nom
-        for (const key of Object.keys(item)) {
-            if (key.toLowerCase().includes('adresse') || key.toLowerCase().includes('address')) {
-                return item[key] || '';
-            }
-        }
-        return '';
-    }).filter(addr => addr !== '');
-    
-    // Créer aussi un Set des références pour identifyDecontaminatedLands()
-    const officialReferences = new Set(
-        governmentData.map(item => {
-            const ref = item.NO_MEF_LIEU || item.reference || item.Reference || item.ID;
-            return (ref || '').toString().trim().toLowerCase();
-        }).filter(ref => ref !== '')
-    );
-    
     // Identifier automatiquement les terrains potentiellement décontaminés
-    identifyDecontaminatedLands(officialReferences);
+    identifyDecontaminatedLands();
 }
 
 /**
@@ -438,7 +415,7 @@ function addressesAreSimilar(addr1, addr2) {
  * Utilise les données officielles du registre gouvernemental (ETAT_REHAB, IS_DECONTAMINATED)
  * et corrèle avec les commentaires municipaux
  */
-function identifyDecontaminatedLands(officialReferences) {
+function identifyDecontaminatedLands() {
     console.log('🔍 Détection automatique des terrains décontaminés...');
     console.log('📊 Données municipales disponibles:', municipalData.length);
     console.log('📊 Données gouvernementales disponibles:', governmentData.length);
@@ -460,7 +437,8 @@ function identifyDecontaminatedLands(officialReferences) {
     
     governmentData.forEach(terrain => {
         // Index par référence
-        const ref = (terrain.NO_MEF_LIEU || terrain.reference || '').toString().toLowerCase().trim();
+        // ⚡ Bolt: Consolidated reference extraction to remove redundant loops in caller
+        const ref = (terrain.NO_MEF_LIEU || terrain.reference || terrain.Reference || terrain.ID || '').toString().trim().toLowerCase();
         if (ref) {
             govTerrainMapByRef.set(ref, terrain);
         }
@@ -543,7 +521,7 @@ function identifyDecontaminatedLands(officialReferences) {
         const isDecontaminatedInGov = govTerrain && govTerrain.IS_DECONTAMINATED === true;
         
         // Critère 4 : Avait une référence mais n'est plus dans le registre gouvernemental
-        const notInGovernmentRegistry = hadReference && !officialReferences.has(referenceStr.toLowerCase());
+        const notInGovernmentRegistry = hadReference && !govTerrainMapByRef.has(referenceStr.toLowerCase());
         
         // Déterminer si le terrain est potentiellement décontaminé
         let isDecontaminated = false;

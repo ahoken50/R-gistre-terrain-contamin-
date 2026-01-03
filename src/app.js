@@ -301,6 +301,13 @@ function preprocessGovernmentData(data) {
             writable: true,
             enumerable: false
         });
+
+        // 4. Ajouter l'adresse normalisée pour les comparaisons rapides
+        Object.defineProperty(item, '_normalized_addr', {
+            value: normalizeAddress(item.ADR_CIV_LIEU || item.adresse || item.Adresse || ''),
+            writable: true,
+            enumerable: false
+        });
     });
 }
 
@@ -325,6 +332,14 @@ function preprocessMunicipalData(data) {
 
         Object.defineProperty(item, '_search_ref', {
             value: (item.reference || item.Reference || '').toString().toLowerCase(),
+            writable: true,
+            enumerable: false
+        });
+
+        // Ajouter l'adresse normalisée pour les comparaisons rapides
+        Object.defineProperty(item, '_normalized_addr', {
+            // Utiliser la même logique de récupération que getColumnValue pour correspondre à identifyDecontaminatedLands
+            value: normalizeAddress(item.adresse || item.address || item.Adresse || item.ADRESSE || ''),
             writable: true,
             enumerable: false
         });
@@ -444,9 +459,9 @@ function identifyDecontaminatedLands() {
         }
         
         // Index par adresse normalisée pour cross-référence
-        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
-        if (address) {
-            const normalizedAddr = normalizeAddress(address);
+        // ⚡ Bolt: Use pre-calculated normalized address
+        const normalizedAddr = terrain._normalized_addr;
+        if (normalizedAddr) {
             if (!govTerrainMapByAddress.has(normalizedAddr)) {
                 govTerrainMapByAddress.set(normalizedAddr, []);
             }
@@ -511,7 +526,8 @@ function identifyDecontaminatedLands() {
            
            // Si pas trouvé par référence, chercher par adresse
            if (!govTerrain && adresse) {
-               const normalizedMunicipalAddr = normalizeAddress(adresse);
+               // ⚡ Bolt: Use pre-calculated normalized address
+               const normalizedMunicipalAddr = item._normalized_addr;
                const matchingTerrains = govTerrainMapByAddress.get(normalizedMunicipalAddr);
                if (matchingTerrains && matchingTerrains.length > 0) {
                    govTerrain = matchingTerrains[0]; // Prendre le premier match

@@ -28,6 +28,8 @@ let validationsData = { validated: [], rejected: [], lastUpdate: null }; // Vali
 const municipalTable = document.getElementById('municipal-table');
 const governmentTable = document.getElementById('government-table');
 const decontaminatedTable = document.getElementById('decontaminated-table');
+const loadingMunicipal = document.getElementById('loading-municipal');
+const loadingGovernment = document.getElementById('loading-government');
 
 // Références aux éléments de statistiques
 const statsMunicipal = document.getElementById('stats-municipal');
@@ -1947,6 +1949,12 @@ async function initializeApp() {
     // Afficher un message de chargement
     lastUpdateElement.textContent = 'Chargement en cours...';
     
+    // Afficher les spinners de chargement et masquer les tableaux
+    if (loadingMunicipal) loadingMunicipal.style.display = 'block';
+    if (loadingGovernment) loadingGovernment.style.display = 'block';
+    if (municipalTable) municipalTable.style.display = 'none';
+    if (governmentTable) governmentTable.style.display = 'none';
+
     try {
         // Vérifier si la migration localStorage → Firebase a été faite
         const migrationDone = localStorage.getItem('firebase_migration_done');
@@ -1985,6 +1993,12 @@ async function initializeApp() {
         displayDataInTable(municipalTable, municipalData);
         displayGovernmentData(governmentTable, governmentData);
         displayDecontaminatedData(decontaminatedTable, decontaminatedData, false);
+
+        // Masquer les spinners et afficher les tableaux
+        if (loadingMunicipal) loadingMunicipal.style.display = 'none';
+        if (loadingGovernment) loadingGovernment.style.display = 'none';
+        if (municipalTable) municipalTable.style.display = 'table';
+        if (governmentTable) governmentTable.style.display = 'table';
     
     // Mettre à jour le compteur
     const countElement = document.getElementById('decontaminated-filtered-count');

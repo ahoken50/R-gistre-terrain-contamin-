@@ -24,6 +24,11 @@ let decontaminatedData = [];
 let pendingDecontaminatedData = []; // Terrains en attente de validation
 let validationsData = { validated: [], rejected: [], lastUpdate: null }; // Validations permanentes
 
+// Variables globales pour le cache des maps gouvernementales
+// ⚡ Bolt: Cache maps to avoid O(N) rebuilding on every validation action
+let cachedGovTerrainMapByRef = null;
+let cachedGovTerrainMapByAddress = null;
+
 // Références aux éléments DOM
 const municipalTable = document.getElementById('municipal-table');
 const governmentTable = document.getElementById('government-table');
@@ -53,6 +58,63 @@ const exportPdfMunicipalBtn = document.getElementById('export-pdf-municipal');
 const exportPdfGovernmentBtn = document.getElementById('export-pdf-government');
 const exportPdfDecontaminatedBtn = document.getElementById('export-pdf-decontaminated');
 const generateReportBtn = document.getElementById('generate-report');
+
+/**
+ * Réinitialiser le cache des maps gouvernementales
+ * À appeler quand governmentData change
+ */
+function resetGovernmentMaps() {
+    cachedGovTerrainMapByRef = null;
+    cachedGovTerrainMapByAddress = null;
+}
+
+/**
+ * Construire ou récupérer les maps gouvernementales
+ * ⚡ Bolt: Uses caching and pre-calculated normalized addresses
+ */
+function buildGovernmentMaps() {
+    if (cachedGovTerrainMapByRef && cachedGovTerrainMapByAddress) {
+        return {
+            byRef: cachedGovTerrainMapByRef,
+            byAddress: cachedGovTerrainMapByAddress
+        };
+    }
+
+    const byRef = new Map();
+    const byAddress = new Map();
+
+    governmentData.forEach(terrain => {
+        // Index par référence
+        const ref = (terrain.NO_MEF_LIEU || terrain.reference || terrain.Reference || terrain.ID || '').toString().trim().toLowerCase();
+        if (ref) {
+            byRef.set(ref, terrain);
+        }
+
+        // Index par adresse normalisée pour cross-référence
+        // ⚡ Bolt: Use pre-calculated normalized address if available
+        if (terrain._normalized_addr) {
+            if (!byAddress.has(terrain._normalized_addr)) {
+                byAddress.set(terrain._normalized_addr, []);
+            }
+            byAddress.get(terrain._normalized_addr).push(terrain);
+        } else {
+            // Fallback if pre-calculation missed (shouldn't happen with correct flow)
+            const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
+            if (address) {
+                const normalizedAddr = normalizeAddress(address);
+                if (!byAddress.has(normalizedAddr)) {
+                    byAddress.set(normalizedAddr, []);
+                }
+                byAddress.get(normalizedAddr).push(terrain);
+            }
+        }
+    });
+
+    cachedGovTerrainMapByRef = byRef;
+    cachedGovTerrainMapByAddress = byAddress;
+
+    return { byRef, byAddress };
+}
 
 /**
  * Charger les données municipales depuis Firebase
@@ -147,6 +209,9 @@ async function loadGovernmentData() {
             governmentData = firebaseData;
             // Pre-process data immediately after loading
             preprocessGovernmentData(governmentData);
+            // ⚡ Bolt: Invalidate map cache when data changes
+            resetGovernmentMaps();
+
             console.log(`✅ ${governmentData.length} enregistrements gouvernementaux chargés depuis Firebase`);
             
             // Mettre à jour la date de dernière mise à jour
@@ -178,6 +243,8 @@ async function loadGovernmentData() {
 
         // Pre-process data immediately after loading
         preprocessGovernmentData(governmentData);
+        // ⚡ Bolt: Invalidate map cache when data changes
+        resetGovernmentMaps();
         
         // Sauvegarder dans Firebase pour la prochaine fois
         if (governmentData.length > 0) {
@@ -301,6 +368,16 @@ function preprocessGovernmentData(data) {
             writable: true,
             enumerable: false
         });
+
+        // ⚡ Bolt: Pre-calculate normalized address for map building
+        const addressForNorm = (item.ADR_CIV_LIEU || item.adresse || '').toString().toLowerCase().trim();
+        if (addressForNorm) {
+            Object.defineProperty(item, '_normalized_addr', {
+                value: normalizeAddress(addressForNorm),
+                writable: true,
+                enumerable: false
+            });
+        }
     });
 }
 
@@ -328,6 +405,16 @@ function preprocessMunicipalData(data) {
             writable: true,
             enumerable: false
         });
+
+        // ⚡ Bolt: Pre-calculate normalized address for matching
+        const addressForNorm = (item.adresse || item.Adresse || '').toString().toLowerCase().trim();
+        if (addressForNorm) {
+            Object.defineProperty(item, '_normalized_addr', {
+                value: normalizeAddress(addressForNorm),
+                writable: true,
+                enumerable: false
+            });
+        }
     });
 }
 
@@ -372,45 +459,6 @@ function normalizeAddress(address) {
 }
 
 /**
- * Extraire la partie significative d'une adresse (numéro + rue de base)
- * Ex: "725 3e avenue ouest" -> "725 3e avenue"
- * Ex: "1185 des foreurs" -> "1185 des foreurs"
- */
-function getAddressCore(address) {
-    const normalized = normalizeAddress(address);
-    const parts = normalized.split(' ');
-    
-    // Garder numéro + max 3 mots suivants (avant les directions ouest/est/nord/sud)
-    let core = [];
-    for (let i = 0; i < Math.min(4, parts.length); i++) {
-        const word = parts[i];
-        // Arrêter si on trouve une direction ou mention de ville
-        if (['ouest', 'est', 'nord', 'sud', 'o', 'e', 'n', 's'].includes(word)) {
-            break;
-        }
-        core.push(word);
-    }
-    
-    return core.join(' ');
-}
-
-/**
- * Vérifier si deux adresses sont similaires
- * Compare le "core" de l'adresse (numéro + rue) sans les directions/ville
- */
-function addressesAreSimilar(addr1, addr2) {
-    if (!addr1 || !addr2) return false;
-    
-    const core1 = getAddressCore(addr1);
-    const core2 = getAddressCore(addr2);
-    
-    // Vérifier si un core est contenu dans l'autre (pour gérer variations)
-    return core1 === core2 || 
-           core1.includes(core2) || 
-           core2.includes(core1);
-}
-
-/**
  * Identifier automatiquement les terrains décontaminés
  * Utilise les données officielles du registre gouvernemental (ETAT_REHAB, IS_DECONTAMINATED)
  * et corrèle avec les commentaires municipaux
@@ -432,27 +480,8 @@ function identifyDecontaminatedLands() {
     pendingDecontaminatedData = [];
     
     // Créer une map des terrains gouvernementaux pour accès rapide par référence
-    const govTerrainMapByRef = new Map();
-    const govTerrainMapByAddress = new Map();
-    
-    governmentData.forEach(terrain => {
-        // Index par référence
-        // ⚡ Bolt: Consolidated reference extraction to remove redundant loops in caller
-        const ref = (terrain.NO_MEF_LIEU || terrain.reference || terrain.Reference || terrain.ID || '').toString().trim().toLowerCase();
-        if (ref) {
-            govTerrainMapByRef.set(ref, terrain);
-        }
-        
-        // Index par adresse normalisée pour cross-référence
-        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
-        if (address) {
-            const normalizedAddr = normalizeAddress(address);
-            if (!govTerrainMapByAddress.has(normalizedAddr)) {
-                govTerrainMapByAddress.set(normalizedAddr, []);
-            }
-            govTerrainMapByAddress.get(normalizedAddr).push(terrain);
-        }
-    });
+    // ⚡ Bolt: Use cached maps
+    const { byRef: govTerrainMapByRef, byAddress: govTerrainMapByAddress } = buildGovernmentMaps();
     
     console.log('📋 Index créés:');
     console.log(`  - Par référence: ${govTerrainMapByRef.size} entrées`);
@@ -511,7 +540,8 @@ function identifyDecontaminatedLands() {
            
            // Si pas trouvé par référence, chercher par adresse
            if (!govTerrain && adresse) {
-               const normalizedMunicipalAddr = normalizeAddress(adresse);
+               // ⚡ Bolt: Use pre-calculated normalized address
+               const normalizedMunicipalAddr = item._normalized_addr || normalizeAddress(adresse);
                const matchingTerrains = govTerrainMapByAddress.get(normalizedMunicipalAddr);
                if (matchingTerrains && matchingTerrains.length > 0) {
                    govTerrain = matchingTerrains[0]; // Prendre le premier match
@@ -1438,6 +1468,8 @@ function filterDecontaminatedData() {
 
            // Pre-process data immediately after update
            preprocessGovernmentData(governmentData);
+           // ⚡ Bolt: Invalidate map cache when data changes
+           resetGovernmentMaps();
            
            // 5. Sauvegarder dans Firebase avec métadonnées de synchronisation
            await saveGovernmentDataToFirebase(governmentData);

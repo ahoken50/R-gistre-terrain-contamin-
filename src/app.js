@@ -20,6 +20,10 @@ const BASE_URL = import.meta.env.BASE_URL;
 // Variables globales pour stocker les données
 let municipalData = [];
 let governmentData = [];
+// ⚡ Bolt: Caching lookup maps to avoid O(N) rebuilding on every validation action
+let cachedGovTerrainMapByRef = null;
+let cachedGovTerrainMapByAddress = null;
+
 let decontaminatedData = [];
 let pendingDecontaminatedData = []; // Terrains en attente de validation
 let validationsData = { validated: [], rejected: [], lastUpdate: null }; // Validations permanentes
@@ -254,9 +258,14 @@ function cleanEtatRehab(text) {
  * - Nettoie ETAT_REHAB une seule fois
  * - Normalise les adresses (remplace \n par ,)
  * - Ajoute des champs de recherche pré-calculés (minuscules)
+ * - ⚡ Bolt: Construit les maps de recherche une seule fois
  */
 function preprocessGovernmentData(data) {
     if (!data || !Array.isArray(data)) return;
+
+    // ⚡ Bolt: Initialize maps
+    cachedGovTerrainMapByRef = new Map();
+    cachedGovTerrainMapByAddress = new Map();
 
     data.forEach(item => {
         // 1. Nettoyer ETAT_REHAB
@@ -301,6 +310,23 @@ function preprocessGovernmentData(data) {
             writable: true,
             enumerable: false
         });
+
+        // ⚡ Bolt: Populate cached maps
+        // Index par référence
+        const ref = (item.NO_MEF_LIEU || item.reference || item.Reference || item.ID || '').toString().trim().toLowerCase();
+        if (ref) {
+            cachedGovTerrainMapByRef.set(ref, item);
+        }
+
+        // Index par adresse normalisée pour cross-référence
+        const address = (item.ADR_CIV_LIEU || item.adresse || '').toString().toLowerCase().trim();
+        if (address) {
+            const normalizedAddr = normalizeAddress(address);
+            if (!cachedGovTerrainMapByAddress.has(normalizedAddr)) {
+                cachedGovTerrainMapByAddress.set(normalizedAddr, []);
+            }
+            cachedGovTerrainMapByAddress.get(normalizedAddr).push(item);
+        }
     });
 }
 
@@ -431,30 +457,33 @@ function identifyDecontaminatedLands() {
     decontaminatedData = [];
     pendingDecontaminatedData = [];
     
-    // Créer une map des terrains gouvernementaux pour accès rapide par référence
-    const govTerrainMapByRef = new Map();
-    const govTerrainMapByAddress = new Map();
-    
-    governmentData.forEach(terrain => {
-        // Index par référence
-        // ⚡ Bolt: Consolidated reference extraction to remove redundant loops in caller
-        const ref = (terrain.NO_MEF_LIEU || terrain.reference || terrain.Reference || terrain.ID || '').toString().trim().toLowerCase();
-        if (ref) {
-            govTerrainMapByRef.set(ref, terrain);
-        }
+    // ⚡ Bolt: Use cached maps if available, otherwise build them (fallback)
+    let govTerrainMapByRef = cachedGovTerrainMapByRef;
+    let govTerrainMapByAddress = cachedGovTerrainMapByAddress;
+
+    if (!govTerrainMapByRef || !govTerrainMapByAddress) {
+        console.warn('⚠️ Maps not cached, rebuilding...');
+        govTerrainMapByRef = new Map();
+        govTerrainMapByAddress = new Map();
         
-        // Index par adresse normalisée pour cross-référence
-        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
-        if (address) {
-            const normalizedAddr = normalizeAddress(address);
-            if (!govTerrainMapByAddress.has(normalizedAddr)) {
-                govTerrainMapByAddress.set(normalizedAddr, []);
+        governmentData.forEach(terrain => {
+            const ref = (terrain.NO_MEF_LIEU || terrain.reference || terrain.Reference || terrain.ID || '').toString().trim().toLowerCase();
+            if (ref) {
+                govTerrainMapByRef.set(ref, terrain);
             }
-            govTerrainMapByAddress.get(normalizedAddr).push(terrain);
-        }
-    });
+
+            const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
+            if (address) {
+                const normalizedAddr = normalizeAddress(address);
+                if (!govTerrainMapByAddress.has(normalizedAddr)) {
+                    govTerrainMapByAddress.set(normalizedAddr, []);
+                }
+                govTerrainMapByAddress.get(normalizedAddr).push(terrain);
+            }
+        });
+    }
     
-    console.log('📋 Index créés:');
+    console.log('📋 Index utilisés:');
     console.log(`  - Par référence: ${govTerrainMapByRef.size} entrées`);
     console.log(`  - Par adresse: ${govTerrainMapByAddress.size} entrées`);
     

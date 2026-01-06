@@ -301,6 +301,22 @@ function preprocessGovernmentData(data) {
             writable: true,
             enumerable: false
         });
+
+        // Pré-calculer l'adresse normalisée pour identifyDecontaminatedLands
+        // ⚡ Bolt: Caching normalized address to avoid expensive regex in loops
+        Object.defineProperty(item, '_normalized_addr', {
+            value: normalizeAddress(item.ADR_CIV_LIEU || item.adresse || item.Adresse || ''),
+            writable: true,
+            enumerable: false
+        });
+
+        // Pré-calculer l'adresse normalisée pour identifyDecontaminatedLands
+        // ⚡ Bolt: Caching normalized address to avoid expensive regex in loops
+        Object.defineProperty(item, '_normalized_addr', {
+            value: normalizeAddress(item.adresse || item.Adresse || ''),
+            writable: true,
+            enumerable: false
+        });
     });
 }
 
@@ -444,9 +460,9 @@ function identifyDecontaminatedLands() {
         }
         
         // Index par adresse normalisée pour cross-référence
-        const address = (terrain.ADR_CIV_LIEU || terrain.adresse || '').toString().toLowerCase().trim();
-        if (address) {
-            const normalizedAddr = normalizeAddress(address);
+        // ⚡ Bolt: Use cached normalized address
+        const normalizedAddr = terrain._normalized_addr;
+        if (normalizedAddr) {
             if (!govTerrainMapByAddress.has(normalizedAddr)) {
                 govTerrainMapByAddress.set(normalizedAddr, []);
             }
@@ -511,7 +527,8 @@ function identifyDecontaminatedLands() {
            
            // Si pas trouvé par référence, chercher par adresse
            if (!govTerrain && adresse) {
-               const normalizedMunicipalAddr = normalizeAddress(adresse);
+               // ⚡ Bolt: Use cached normalized address
+               const normalizedMunicipalAddr = item._normalized_addr;
                const matchingTerrains = govTerrainMapByAddress.get(normalizedMunicipalAddr);
                if (matchingTerrains && matchingTerrains.length > 0) {
                    govTerrain = matchingTerrains[0]; // Prendre le premier match

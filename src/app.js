@@ -301,6 +301,37 @@ function preprocessGovernmentData(data) {
             writable: true,
             enumerable: false
         });
+
+        // 4. Pré-calculer les éléments d'affichage pour éviter le travail répétitif lors du rendu
+        // Optimisation ⚡ Bolt: Déplacer la logique coûteuse hors de la boucle de rendu
+
+        // a) Pré-calcul des badges de qualité
+        const getBadgeInfo = (quality) => {
+            if (!quality || quality === '') return { className: 'qual-badge qual-empty', text: '-' };
+            const qualStr = quality.toString().trim();
+            if (qualStr.includes('Plage A')) return { className: 'qual-badge qual-a', text: 'A' };
+            if (qualStr.includes('Plage B-C') || qualStr.includes('Plage BC')) return { className: 'qual-badge qual-bc', text: 'B-C' };
+            if (qualStr.includes('Plage B')) return { className: 'qual-badge qual-b', text: 'B' };
+            if (qualStr.includes('Plage C')) return { className: 'qual-badge qual-c', text: 'C' };
+            return { className: 'qual-badge qual-empty', text: qualStr };
+        };
+
+        const badgeAv = getBadgeInfo(item.QUAL_SOLS_AV);
+        Object.defineProperty(item, '_qual_av_badge', { value: badgeAv, writable: true, enumerable: false });
+
+        const badgeAp = getBadgeInfo(item.QUAL_SOLS);
+        Object.defineProperty(item, '_qual_ap_badge', { value: badgeAp, writable: true, enumerable: false });
+
+        // b) Pré-calcul des contaminants (évite split/map/filter/slice à chaque rendu)
+        let displayContaminants = null;
+        if (item.CONTAM_SOL_EXTRA) {
+             const parts = item.CONTAM_SOL_EXTRA.split(',').map(c => c.trim()).filter(c => c.length > 0);
+             if (parts.length > 0) {
+                 displayContaminants = parts.slice(0, 5).join(', ');
+                 if (parts.length > 5) displayContaminants += ', ...';
+             }
+        }
+        Object.defineProperty(item, '_display_contaminants', { value: displayContaminants, writable: true, enumerable: false });
     });
 }
 
@@ -752,49 +783,37 @@ function displayGovernmentData(table, data) {
         
         // Colonne 5: Qualité des sols AVANT décontamination
         const qualAvantCell = document.createElement('td');
-        const qualAv = item.QUAL_SOLS_AV || '';
-        if (qualAv) {
-            const badge = createQualityBadge(qualAv);
-            qualAvantCell.innerHTML = badge;
-        } else {
-            qualAvantCell.innerHTML = '<span class="qual-badge qual-empty">-</span>';
+        // Optimisation ⚡ Bolt: Utilisation des badges pré-calculés
+        if (item._qual_av_badge) {
+            const span = document.createElement('span');
+            span.className = item._qual_av_badge.className;
+            if (item.QUAL_SOLS_AV) span.title = item.QUAL_SOLS_AV;
+            span.textContent = item._qual_av_badge.text;
+            qualAvantCell.appendChild(span);
         }
         row.appendChild(qualAvantCell);
         
         // Colonne 6: Qualité des sols APRÈS décontamination (critère atteint)
         const qualApresCell = document.createElement('td');
-        const qualAp = item.QUAL_SOLS || '';
-        if (qualAp) {
-            const badge = createQualityBadge(qualAp);
-            qualApresCell.innerHTML = badge;
-        } else {
-            qualApresCell.innerHTML = '<span class="qual-badge qual-empty">-</span>';
+        if (item._qual_ap_badge) {
+            const span = document.createElement('span');
+            span.className = item._qual_ap_badge.className;
+            if (item.QUAL_SOLS) span.title = item.QUAL_SOLS;
+            span.textContent = item._qual_ap_badge.text;
+            qualApresCell.appendChild(span);
         }
         row.appendChild(qualApresCell);
         
         // Colonne 7: Contaminants (Sol)
         const contamCell = document.createElement('td');
-        // Déjà nettoyé dans preprocessGovernmentData (remplacement des \n)
-        const contaminants = item.CONTAM_SOL_EXTRA || '';
-        if (contaminants) {
-            // Nettoyer et formater les contaminants
-            const contamList = contaminants
-                .split(',')
-                .map(c => c.trim())
-                .filter(c => c.length > 0)
-                .slice(0, 5); // Limiter à 5 premiers
-            
+        // Optimisation ⚡ Bolt: Utilisation de la chaîne pré-calculée
+        if (item._display_contaminants) {
             const contamDiv = document.createElement('div');
             contamDiv.className = 'contaminants-cell';
-            contamDiv.textContent = contamList.join(', ');
+            contamDiv.textContent = item._display_contaminants;
             
-            // Ajouter "..." si plus de 5 contaminants
-            if (contaminants.split(',').length > 5) {
-                contamDiv.textContent += ', ...';
-            }
-            
-            // Tooltip avec la liste complète
-            contamDiv.title = contaminants;
+            // Tooltip avec la liste complète (item.CONTAM_SOL_EXTRA est déjà nettoyé)
+            contamDiv.title = item.CONTAM_SOL_EXTRA;
             contamDiv.style.cursor = 'help';
             
             contamCell.appendChild(contamDiv);

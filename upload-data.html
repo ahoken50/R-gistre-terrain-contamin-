@@ -142,7 +142,7 @@
         <hr>
         
         <!-- Zone de téléchargement -->
-        <div class="drop-zone" id="dropZone">
+        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Zone de téléchargement de fichier. Cliquez ou appuyez sur Entrée pour sélectionner un fichier, ou glissez-déposez un fichier ici.">
             <h3>📁 Glissez-déposez votre fichier CSV ou Excel ici</h3>
             <p>ou cliquez pour sélectionner un fichier</p>
             <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
@@ -531,6 +531,14 @@
 
         // Drag & Drop
         dropZone.addEventListener("click", () => fileInput.click());
+
+        // Accessibilité clavier
+        dropZone.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                fileInput.click();
+            }
+        });
 
         dropZone.addEventListener("dragover", (event) => {
             event.preventDefault();

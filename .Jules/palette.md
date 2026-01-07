@@ -1,3 +1,3 @@
-## 2024-05-23 - Accessibility of Filter Inputs
-**Learning:** Filter inputs often lack associated `<label>` elements, relying solely on `placeholder` attributes which are insufficient for screen readers.
-**Action:** Always verify that input fields have either a visible `<label>` with a `for` attribute or an `aria-label` attribute if a visual label is not design-compatible.
+## 2024-05-24 - Drop Zone Accessibility
+**Learning:** Custom interactive elements like drag-and-drop zones (`div`) are often inaccessible to keyboard users.
+**Action:** Always add `tabindex="0"`, `role="button"`, proper `aria-label`, and `keydown` listeners (Enter/Space) to custom interactive elements to ensure they are accessible.

@@ -2072,6 +2072,26 @@ async function initializeApp() {
         if (forceRefreshBtn) {
             forceRefreshBtn.addEventListener('click', forceRefreshCache);
         }
+
+        // ✨ Palette: Gestion du bouton Retour en haut
+        const backToTopBtn = document.getElementById('back-to-top');
+        if (backToTopBtn) {
+            const toggleBackToTop = () => {
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            };
+
+            window.addEventListener('scroll', debounce(toggleBackToTop, 100));
+
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Enlever le focus après le clic pour esthétique
+                backToTopBtn.blur();
+            });
+        }
         
         console.log('✅ Application initialisée avec succès !');
            

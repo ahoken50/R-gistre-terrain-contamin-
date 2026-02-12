@@ -38,10 +38,12 @@
             margin: 30px 0;
             background: #f8f9ff;
         }
-        .drop-zone:hover, .drop-zone.drag-over {
+        .drop-zone:hover, .drop-zone.drag-over, .drop-zone:focus {
             background-color: #e7f3ff;
             border-color: #764ba2;
             transform: scale(1.02);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.2);
         }
         .drop-zone h3 {
             color: #667eea;
@@ -142,7 +144,7 @@
         <hr>
         
         <!-- Zone de téléchargement -->
-        <div class="drop-zone" id="dropZone">
+        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Zone de téléversement : Cliquez ou glissez un fichier ici">
             <h3>📁 Glissez-déposez votre fichier CSV ou Excel ici</h3>
             <p>ou cliquez pour sélectionner un fichier</p>
             <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
@@ -531,6 +533,14 @@
 
         // Drag & Drop
         dropZone.addEventListener("click", () => fileInput.click());
+
+        // Accessibilité clavier
+        dropZone.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                fileInput.click();
+            }
+        });
 
         dropZone.addEventListener("dragover", (event) => {
             event.preventDefault();
